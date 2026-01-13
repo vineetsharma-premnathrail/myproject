@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<!-- ========================================================================================
+     500 ERROR PAGE - Internal Server Error
+     ================================================================================
+     Purpose: HTTP 500 Internal Server Error page for application crashes and server issues
+     Framework: Static HTML with Tailwind CSS
+     Features: User-friendly error display, pulse animation, professional design
+     Dependencies: Tailwind CSS (CDN), Google Fonts (Oswald, Roboto)
+     Error Type: Server-side application error, database issues, or system failures
+     Accessibility: Clear error messaging, navigation options, semantic HTML
+     ================================================================================ -->
+<html lang="en">
+<!-- HTML root element with language set to English for accessibility and SEO -->
+
+<head>
+    <!-- ========================================================================================
+         DOCUMENT HEAD - Metadata and External Resources
+         ================================================================================
+         Contains: Character encoding, viewport settings, page title, CSS frameworks,
+         custom fonts, animations, and responsive design configuration
+         ================================================================================ -->
+    <meta charset="UTF-8">
+    <!-- Character encoding declaration - ensures proper display of special characters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Responsive viewport meta tag - enables mobile-friendly scaling and layout -->
+    <title>500 - Server Error | Premnath Engineering</title>
+    <!-- Page title displayed in browser tab and bookmarks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS framework loaded from CDN - provides utility-first CSS classes -->
+
+    <!-- ========================================================================================
+         GOOGLE FONTS - Typography Loading
+         ================================================================================
+         Loads: Oswald font family (weights 300-700) for headings, Roboto (weights 300-700) for body text
+         Purpose: Professional typography for error page readability
+         ================================================================================ -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- ========================================================================================
+         TAILWIND CONFIGURATION - Custom Theme Settings
+         ================================================================================
+         Configures: Dark mode support, custom font families, brand colors for consistency
+         Colors: Custom page background, surface colors, and brand blue
+         ================================================================================ -->
+    <script>
+        // Tailwind CSS configuration object for custom theme extensions
+        tailwind.config = {
+            darkMode: 'class', // Enables dark mode using CSS class toggling
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'], // Default sans-serif font for body text
+                        display: ['Oswald', 'sans-serif'], // Display font for headings and branding
+                    },
+                    colors: {
+                        page: '#f0f2f5', // Custom page background color
+                        surface: '#ffffff', // Surface color for cards and containers
+                        brand: '#1d4ed8', // Brand blue color for links and accents
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- ========================================================================================
+         CUSTOM CSS STYLES - 500 Page Animations
+         ================================================================================
+         Contains: Pulse animation for server error indication
+         Features: Slow pulsing opacity effect to indicate system status
+         ================================================================================ -->
+    <style>
+        /* ========================================================================================
+             PULSE ANIMATION
+             ================================================================================
+             Purpose: Subtle pulse animation for the server error icon
+             Features: Opacity pulsing to indicate ongoing server issues
+             Timing: 2-second duration with ease-in-out for smooth transitions
+             ================================================================================ */
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; } /* Full opacity at start and end */
+            50% { opacity: 0.5; } /* Reduced opacity at midpoint */
+        }
+        .pulse-animation {
+            animation: pulse-slow 2s ease-in-out infinite; /* Continuous pulsing animation */
+        }
+    </style>
+</head>
+
+<body class="bg-page dark:bg-gray-900 min-h-screen flex flex-col">
+    <!-- ========================================================================================
+         MAIN BODY - 500 Error Page Layout
+         ================================================================================
+         Layout: Flex column layout with navbar and centered error content
+         Features: Dark mode support, minimum height for full viewport coverage
+         Purpose: User-friendly display of server error with navigation options
+         ================================================================================ -->
+
+    <!-- ========================================================================================
+         NAVIGATION BAR - Minimal Header for Error Page
+         ================================================================================ -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16">
+        <!-- Minimal navigation bar with logo only for error pages -->
+        <div class="max-w-7xl mx-auto px-6 h-full flex items-center">
+            <!-- Centered container with logo link to homepage -->
+            <a href="/" class="flex items-center gap-3">
+                <!-- Logo link to homepage for navigation from error state -->
+                <img src="/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <!-- Company logo image with responsive sizing and hover effects -->
+                <div class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] bg-black text-white hidden items-center justify-center font-display font-bold text-xl rounded group-hover:bg-blue-700 transition shadow-sm">P</div>
+                <!-- Fallback logo text if image fails to load -->
+            </a>
+        </div>
+    </nav>
+
+    <!-- 500 Content -->
+    <main class="flex-1 flex items-center justify-center px-6 py-12">
+        <div class="text-center max-w-lg">
+            <!-- Server Icon -->
+            <div class="mb-8">
+                <div class="inline-flex items-center justify-center w-32 h-32 bg-red-100 dark:bg-red-900/30 rounded-full pulse-animation">
+                    <svg class="w-16 h-16 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Large 500 Text -->
+            <span class="text-6xl font-display font-bold text-red-500 block mb-4">500</span>
+            
+            <!-- Error Message -->
+            <h1 class="text-3xl font-display font-bold text-gray-900 dark:text-white mb-4">
+                Internal Server Error
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-8">
+                Something went wrong on our end. Our team has been notified and is working to fix the issue. 
+                Please try again in a few moments.
+            </p>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="location.reload()" class="inline-flex items-center justify-center gap-2 bg-brand hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition shadow-lg hover:shadow-xl">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Try Again
+                </button>
+                <a href="/" class="inline-flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold px-8 py-4 rounded-lg transition">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Go Home
+                </a>
+            </div>
+            
+            <!-- Technical Info -->
+            <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    If the problem persists, please contact support with this error code:
+                    <br>
+                    <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs mt-2 inline-block">
+                        ERR_500_<span id="errorTime"></span>
+                    </code>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6">
+            <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+                <nav class="flex flex-wrap gap-4 mt-2">
+                    <a href="/privacy-policy.html" class="text-xs text-blue-600 hover:underline">Privacy Policy</a>
+                    <a href="/terms.html" class="text-xs text-blue-600 hover:underline">Terms</a>
+                    <a href="/faq.html" class="text-xs text-blue-600 hover:underline">FAQ</a>
+                    <a href="/documentation.html" class="text-xs text-blue-600 hover:underline">Documentation</a>
+                    <a href="/disclaimer.html" class="text-xs text-blue-600 hover:underline">Disclaimer</a>
+                </nav>
+            </div>
+    </footer>
+
+    <script>
+        // Theme initialization
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+        // Error timestamp
+        document.getElementById('errorTime').textContent = Date.now().toString(36).toUpperCase();
+    </script>
+</body>
+</html>

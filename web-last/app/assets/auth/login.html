@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<!-- ========================================================================================
+     LOGIN - Premnath Engineering Works Authentication
+     ================================================================================
+     Purpose: User login page for system authentication
+     Framework: Static HTML with Tailwind CSS and vanilla JavaScript
+     Features: Responsive design, dark mode toggle, toast notifications,
+               form validation, role-based redirects
+     Dependencies: Tailwind CSS (CDN), Google Fonts (Oswald, Roboto)
+     Accessibility: Semantic HTML, proper form labels, keyboard navigation
+     ================================================================================ -->
+<html lang="en">
+<head>
+  <!-- Character encoding for proper text display -->
+  <meta charset="UTF-8">
+  <!-- Responsive viewport configuration -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Page title for browser tab -->
+  <title>Login - Premnath Engineering</title>
+  <!-- Tailwind CSS framework from CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Roboto', 'sans-serif'],
+            display: ['Oswald', 'sans-serif']
+          },
+          colors: {
+            page: '#f0f2f5',
+            surface: '#ffffff',
+            dark: '#212529'
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 120px;
+      color: rgba(0, 0, 0, 0.05);
+      z-index: -1;
+      pointer-events: none;
+      font-weight: bold;
+      font-family: 'Oswald', sans-serif;
+      text-transform: uppercase;
+    }
+    /* Toast Notifications */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 14px 20px; border-radius: 8px; color: white; font-weight: 500; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 350px; }
+    .toast.success { background: linear-gradient(135deg, #10b981, #059669); }
+    .toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .toast.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+  </style>
+</head>
+<body class="bg-page dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col min-h-screen">
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+  <!-- NAVBAR -->
+  <nav class="bg-surface dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-20">
+    <div class="max-w-7xl mx-auto px-6 h-full flex justify-between items-center">
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-3 group">
+            <img src="/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] bg-black text-white hidden items-center justify-center font-display font-bold text-xl rounded group-hover:bg-blue-700 transition shadow-sm">P</div>
+        </a>
+
+        <div class="flex items-center gap-4">
+             <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition">
+                <svg id="sun-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="moon-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="flex-grow flex items-center justify-center p-4">
+    <div class="watermark">PREMNATHRAIL</div>
+
+    <div class="bg-surface dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md border-t-4 border-dark">
+      <div class="text-center mb-8">
+          <img src="/assets/images/logo.png" alt="Premnath Engineering" class="h-12 mx-auto mb-2" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="w-12 h-12 bg-black text-white hidden mx-auto mb-2 items-center justify-center font-display font-bold text-xl rounded">P</div>
+          
+    </div>
+    
+    <h2 class="text-xl font-semibold mb-6 text-center text-gray-700 dark:text-gray-300">System Login</h2>
+    
+    <!-- Status Message -->
+    <div id="statusMessage" class="hidden mb-6 p-3 rounded-lg text-sm font-semibold"></div>
+    
+    <!-- Login Form - Authentication form with email/password fields -->
+    <form id="loginForm" class="space-y-6">
+      <!-- Email Input Field -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">Email Address</label>
+        <input type="email" id="email" class="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-dark focus:ring-2 focus:ring-dark/20 focus:outline-none transition" placeholder="engineer@premnath.com" required>
+      </div>
+      <!-- Password Input Field -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">Password</label>
+        <input type="password" id="password" class="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-dark focus:ring-2 focus:ring-dark/20 focus:outline-none transition" placeholder="Enter your password" required>
+      </div>
+      <!-- Submit Button -->
+      <button type="submit" class="w-full bg-dark text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-800 transition shadow-lg hover:shadow-xl">
+        <i class="fas fa-sign-in-alt mr-2"></i>Log In
+      </button>
+    </form>
+    
+    <div class="mt-8 space-y-4 text-center">
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+          <p>Don't have an account?</p>
+          <a href="/signup.html" class="text-green-600 dark:text-green-400 font-semibold hover:underline mt-1 inline-block transition">
+            <i class="fas fa-user-plus mr-1"></i>Sign Up here
+          </a>
+        </div>
+        
+        <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+          <a href="/" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition">
+            <i class="fas fa-home mr-1"></i>Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Dark mode initialization
+      const theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('sun-icon').classList.add('hidden');
+        document.getElementById('moon-icon').classList.remove('hidden');
+      }
+
+      // Theme toggle
+      document.getElementById('theme-toggle').addEventListener('click', function() {
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        
+        if (html.classList.contains('dark')) {
+          html.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+          sunIcon.classList.remove('hidden');
+          moonIcon.classList.add('hidden');
+        } else {
+          html.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+        }
+      });
+
+      if (localStorage.getItem("token")) {
+        window.location.href = "/";
+      }
+    });
+    
+    // Toast notification function
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+      toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const btn = e.target.querySelector('button');
+
+      // Button loading state
+      const originalText = btn.innerText;
+      btn.innerText = "Verifying Credentials...";
+      btn.disabled = true;
+      btn.classList.add('opacity-75');
+
+        try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          localStorage.setItem("token", "true");
+          localStorage.setItem("user_id", data.user_id);
+          localStorage.setItem("email", data.email);
+          localStorage.setItem("is_license_active", data.is_license_active);
+          localStorage.setItem("role", data.role);
+
+          // Mark admin/manager in sessionStorage so admin.html doesn't ask for credentials again
+          if (data.role === 'admin') {
+            sessionStorage.setItem('isAdmin', 'true');
+            sessionStorage.setItem('adminEmail', data.email);
+          } else {
+            sessionStorage.removeItem('isAdmin');
+            sessionStorage.removeItem('adminEmail');
+          }
+          if (data.role === 'manager') {
+            sessionStorage.setItem('isManager', 'true');
+          } else {
+            sessionStorage.removeItem('isManager');
+          }
+
+          // Fetch full profile and update localStorage
+          try {
+            const profileRes = await fetch(`/auth/profile?user_id=${data.user_id}`);
+            if (profileRes.ok) {
+              const profile = await profileRes.json();
+                if (profile.name) {
+                  localStorage.setItem("name", profile.name);
+                  // also set role-specific display name
+                  if (data.role === 'admin') localStorage.setItem('adminName', profile.name);
+                  if (data.role === 'manager') localStorage.setItem('managerName', profile.name);
+                }
+                if (profile.phone_number) localStorage.setItem("phone_number", profile.phone_number);
+                if (profile.profile_photo_path) {
+                  localStorage.setItem("profile_photo_path", profile.profile_photo_path);
+                  // store admin/manager photo too for their dashboards
+                  if (data.role === 'admin') localStorage.setItem('adminPhoto', profile.profile_photo_path);
+                  if (data.role === 'manager') localStorage.setItem('managerPhoto', profile.profile_photo_path);
+                }
+            }
+          } catch (e) { /* ignore profile fetch errors */ }
+
+          // Role-based redirect
+          if (data.role === "admin") {
+            window.location.href = "/admin.html";
+          } else if (data.role === "manager") {
+            window.location.href = "/manager.html";
+          } else if (data.is_new_user) {
+            window.location.href = "/profile.html"; // Onboarding for new users
+          } else {
+            window.location.href = "/";
+          }
+        } else {
+          showToast("Login Failed: " + (data.detail || "Invalid credentials"), "error");
+          btn.innerText = originalText;
+          btn.disabled = false;
+          btn.classList.remove('opacity-75');
+        }
+        } catch (err) {
+          showToast("Server Error. Check internet connection.", "error");
+          btn.innerText = originalText;
+          btn.disabled = false;
+          btn.classList.remove('opacity-75');
+        }
+    });
+  </script>
+<footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto py-8">
+      <div class="px-6 flex flex-col md:flex-row justify-between items-center">
+          <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+      </div>
+  </footer>
+</body>
+</html>

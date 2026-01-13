@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<!-- ========================================================================================
+     TERMS & CONDITIONS - Premnath Engineering Works
+     ================================================================================
+     Purpose: Legal terms and conditions page for user agreement and compliance
+     Framework: Static HTML with Tailwind CSS
+     Features: Responsive design, dark mode support, professional typography
+     Dependencies: Tailwind CSS (CDN), Google Fonts (Oswald, Roboto)
+     Compliance: Legal requirements for user agreements and service terms
+     Accessibility: Semantic HTML, proper heading hierarchy, readable fonts
+     ================================================================================ -->
+<html lang="en">
+<!-- HTML root element with language set to English for accessibility and SEO -->
+
+<head>
+    <!-- ========================================================================================
+         DOCUMENT HEAD - Metadata and External Resources
+         ================================================================================
+         Contains: Character encoding, viewport settings, page title, CSS frameworks,
+         custom fonts, and responsive design configuration
+         ================================================================================ -->
+    <meta charset="UTF-8">
+    <!-- Character encoding declaration - ensures proper display of special characters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Responsive viewport meta tag - enables mobile-friendly scaling and layout -->
+    <title>Terms & Conditions | Premnath Engineering Works</title>
+    <!-- Page title displayed in browser tab and bookmarks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS framework loaded from CDN - provides utility-first CSS classes -->
+
+    <!-- ========================================================================================
+         GOOGLE FONTS - Typography Loading
+         ================================================================================
+         Loads: Oswald font family (weights 300-700) for headings, Roboto (weights 300-700) for body text
+         Purpose: Professional typography for legal document readability
+         ================================================================================ -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- ========================================================================================
+         TAILWIND CONFIGURATION - Custom Theme Settings
+         ================================================================================
+         Configures: Dark mode support, custom font families, brand colors for consistency
+         Colors: Custom page background, surface colors, and brand blue
+         ================================================================================ -->
+    <script>
+        // Tailwind CSS configuration object for custom theme extensions
+        tailwind.config = {
+            darkMode: 'class', // Enables dark mode using CSS class toggling
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'], // Default sans-serif font for body text
+                        display: ['Oswald', 'sans-serif'], // Display font for headings and branding
+                    },
+                    colors: {
+                        page: '#f0f2f5', // Custom page background color
+                        surface: '#ffffff', // Surface color for cards and containers
+                        brand: '#1d4ed8', // Brand blue color for links and accents
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- ========================================================================================
+         CUSTOM CSS STYLES - Terms & Conditions Specific Styling
+         ================================================================================
+         Contains: Prose styling for legal content, proper spacing and typography
+         Features: Semantic heading hierarchy, list styling, paragraph spacing
+         ================================================================================ -->
+    <style>
+        /* ========================================================================================
+             PROSE TYPOGRAPHY STYLES
+             ================================================================================
+             Purpose: Professional styling for legal document content
+             Features: Proper heading hierarchy, ordered/unordered list formatting, consistent spacing
+             ================================================================================ */
+        .prose h2 { margin-top: 2rem; margin-bottom: 1rem; }
+        /* Section heading spacing - top margin for separation, bottom for content */
+        .prose p { margin-bottom: 1rem; }
+        /* Paragraph spacing for readability */
+        .prose ul, .prose ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+        /* List styling with left padding for both ordered and unordered lists */
+        .prose li { margin-bottom: 0.5rem; }
+        /* List item spacing for better readability */
+    </style>
+</head>
+
+<body class="bg-page dark:bg-gray-900 min-h-screen flex flex-col">
+    <!-- ========================================================================================
+         MAIN BODY - Terms & Conditions Page Layout
+         ================================================================================
+         Layout: Flex column layout with navbar and main content area
+         Features: Dark mode support, minimum height for full viewport coverage
+         Purpose: Professional presentation of legal terms and conditions
+         ================================================================================ -->
+
+    <!-- ========================================================================================
+         NAVIGATION BAR - Site Header with Back Link
+         ================================================================================ -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16">
+        <!-- Navigation bar with white/dark background and bottom border -->
+        <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+            <!-- Centered container with max width and flexbox layout -->
+
+            <!-- ========================================================================================
+                 COMPANY LOGO - Navigation to Homepage
+                 ================================================================================ -->
+            <a href="/" class="flex items-center gap-3">
+                <!-- Logo link to homepage with hover effects -->
+                <img src="/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <!-- Company logo image with responsive sizing and hover effects -->
+                <div class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] bg-black text-white hidden items-center justify-center font-display font-bold text-xl rounded group-hover:bg-blue-700 transition shadow-sm">P</div>
+                <!-- Fallback logo text if image fails to load -->
+            </a>
+
+            <!-- ========================================================================================
+                 BACK TO HOME LINK
+                 ================================================================================ -->
+            <a href="/" class="text-gray-600 hover:text-brand dark:text-gray-400 dark:hover:text-blue-400 flex items-center gap-2">
+                <!-- Back to home link with hover color changes -->
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- Left arrow icon for back navigation -->
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+                <!-- Link text with icon -->
+            </a>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="flex-1 py-12">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 md:p-12">
+                <h1 class="text-4xl font-display font-bold text-gray-900 dark:text-white mb-2">Terms & Conditions</h1>
+                <p class="text-gray-500 dark:text-gray-400 mb-8">Last updated: January 2024</p>
+                
+                <div class="prose text-gray-700 dark:text-gray-300">
+                    <p>
+                        Please read these Terms and Conditions ("Terms", "Terms and Conditions") carefully before using 
+                        the Premnath Engineering Works calculation tools platform ("Service") operated by Premnath Engineering 
+                        Works ("us", "we", or "our").
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">1. Acceptance of Terms</h2>
+                    <p>
+                        By accessing and using this Service, you accept and agree to be bound by the terms and provisions 
+                        of this agreement. If you do not agree to abide by these terms, please do not use this Service.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">2. License</h2>
+                    <p>
+                        Subject to your compliance with these Terms, we grant you a limited, non-exclusive, non-transferable, 
+                        non-sublicensable license to access and use the Service for your internal business purposes.
+                    </p>
+                    <ul class="list-disc">
+                        <li>One license key is valid for one user account only</li>
+                        <li>License keys cannot be shared, transferred, or resold</li>
+                        <li>Licenses may have expiration dates as specified at the time of purchase</li>
+                        <li>We reserve the right to revoke licenses for violation of these terms</li>
+                    </ul>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">3. User Account</h2>
+                    <p>
+                        To access certain features of the Service, you must register for an account. You agree to:
+                    </p>
+                    <ul class="list-disc">
+                        <li>Provide accurate and complete registration information</li>
+                        <li>Maintain the security of your password and account</li>
+                        <li>Promptly update any changes to your information</li>
+                        <li>Accept responsibility for all activities that occur under your account</li>
+                    </ul>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">4. Acceptable Use</h2>
+                    <p>You agree not to:</p>
+                    <ul class="list-disc">
+                        <li>Use the Service for any unlawful purpose</li>
+                        <li>Attempt to gain unauthorized access to any portion of the Service</li>
+                        <li>Interfere with or disrupt the integrity or performance of the Service</li>
+                        <li>Reverse engineer, decompile, or disassemble any part of the Service</li>
+                        <li>Share your account credentials with others</li>
+                        <li>Use automated systems to access the Service without permission</li>
+                    </ul>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">5. Intellectual Property</h2>
+                    <p>
+                        The Service and its original content, features, and functionality are and will remain the exclusive 
+                        property of Premnath Engineering Works. The Service is protected by copyright, trademark, and other 
+                        laws of both India and foreign countries.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">6. Calculation Results</h2>
+                    <p>
+                        The calculation tools provided are for reference purposes only. Please refer to our 
+                        <a href="/disclaimer.html" class="text-brand hover:underline">Disclaimer</a> for important information 
+                        about the use of calculation results.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">7. Termination</h2>
+                    <p>
+                        We may terminate or suspend your account and bar access to the Service immediately, without prior 
+                        notice or liability, under our sole discretion, for any reason whatsoever and without limitation, 
+                        including but not limited to a breach of the Terms.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">8. Limitation of Liability</h2>
+                    <p>
+                        In no event shall Premnath Engineering Works, nor its directors, employees, partners, agents, suppliers, 
+                        or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, 
+                        including without limitation, loss of profits, data, use, goodwill, or other intangible losses.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">9. Governing Law</h2>
+                    <p>
+                        These Terms shall be governed and construed in accordance with the laws of India, without regard 
+                        to its conflict of law provisions. Our failure to enforce any right or provision of these Terms 
+                        will not be considered a waiver of those rights.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">10. Changes to Terms</h2>
+                    <p>
+                        We reserve the right, at our sole discretion, to modify or replace these Terms at any time. 
+                        We will provide notice of any changes by posting the new Terms on this page. By continuing to 
+                        access or use our Service after those revisions become effective, you agree to be bound by the revised terms.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">11. Contact Us</h2>
+                    <p>
+                        If you have any questions about these Terms, please contact us at support@premnathengineering.com
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto py-8">
+        <div class="px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+            <nav class="flex flex-wrap gap-4 mt-2">
+                <a href="/privacy-policy.html" class="text-xs text-blue-600 hover:underline">Privacy Policy</a>
+                <a href="/terms.html" class="text-xs text-blue-600 hover:underline">Terms</a>
+                <a href="/faq.html" class="text-xs text-blue-600 hover:underline">FAQ</a>
+                <a href="/documentation.html" class="text-xs text-blue-600 hover:underline">Documentation</a>
+                <a href="/disclaimer.html" class="text-xs text-blue-600 hover:underline">Disclaimer</a>
+            </nav>
+        </div>
+    </footer>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

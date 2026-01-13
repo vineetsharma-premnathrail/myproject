@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hydraulic Motor | Premnath Engineering</title>
+  
+  <!-- SECURITY GATEKEEPER - Runs before page content loads -->
+  <script>
+    (function() {
+      const token = localStorage.getItem("token");
+      const isLicenseActive = localStorage.getItem("is_license_active");
+      const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+      const isManager = sessionStorage.getItem('isManager') === 'true';
+      const isUserManager = sessionStorage.getItem('isUserManager') === 'true';
+      
+      if (!token && !isAdmin && !isManager) {
+        window.location.replace("/login.html");
+      } else if (isLicenseActive !== "true" && !isAdmin && !isManager && !isUserManager) {
+        window.location.replace("/profile.html");
+      }
+    })();
+  </script>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Roboto', 'sans-serif'],
+            display: ['Oswald', 'sans-serif'],
+          },
+          colors: {
+            page: '#f0f2f5', 
+            surface: '#ffffff',
+            dark: '#212529',
+            brand: '#1d4ed8', // Blue-700
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Watermark Effect */
+    .watermark-text::before {
+        content: attr(data-index);
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        font-family: 'Oswald', sans-serif;
+        font-size: 8rem;
+        font-weight: 700;
+        color: #f3f4f6; /* Light gray */
+        z-index: 0;
+        opacity: 0.5;
+        pointer-events: none;
+    }
+    .dark .watermark-text::before {
+        color: #374151; /* Dark gray */
+        opacity: 0.2;
+    }
+    
+    /* Input Styles */
+    .input-field {
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        color: #111827;
+        font-size: 0.875rem;
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+        width: 100%;
+        transition: all 0.2s;
+    }
+    .dark .input-field {
+        background-color: #374151;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+    .input-field:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .input-field:disabled {
+        background-color: #e5e7eb;
+        color: #9ca3af;
+        cursor: not-allowed;
+    }
+    .dark .input-field:disabled {
+        background-color: #1f2937;
+        color: #6b7280;
+    }
+
+    /* Scrollbar for Results */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+    
+    /* Toast Notifications */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 14px 20px; border-radius: 8px; color: white; font-weight: 500; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 350px; }
+    .toast.success { background: linear-gradient(135deg, #10b981, #059669); }
+    .toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .toast.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+  </style>
+
+  <script>
+    // --- AUTH & THEME LOGIC (Consistent with Index) ---
+    const DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHBhdGggZD0iTTE2IDE2QzE4LjIwOTEgMTYgMjAgMTQuMjA5MSAyMCAxMkMxOCA3Ljc5MDkgMTYgMTYuMDAwMSAxNi4wMDAxQzEzLjc5MDkgMTYuMDAwMSAxMiAxOC4yMDkxIDEyIDIwQzEyIDIyLjIwOTEgMTMuNzkgMjQgMTYgMjRaIiBmaWxsPSIjRkZGRkZGRiIvPgo8L3N2Zz4K";
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // 1. Theme Init
+      const theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('sun-icon').classList.add('hidden');
+        document.getElementById('moon-icon').classList.remove('hidden');
+      }
+
+      document.getElementById('theme-toggle').addEventListener('click', function() {
+        const html = document.documentElement;
+        if (html.classList.contains('dark')) {
+          html.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+          document.getElementById('sun-icon').classList.remove('hidden');
+          document.getElementById('moon-icon').classList.add('hidden');
+        } else {
+          html.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+          document.getElementById('sun-icon').classList.add('hidden');
+          document.getElementById('moon-icon').classList.remove('hidden');
+        }
+      });
+
+      // 2. Auth Check
+      const token = localStorage.getItem("token");
+      const authSection = document.getElementById("auth-section");
+      
+      // Check if Admin or Manager is logged in
+      const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+      const isManager = sessionStorage.getItem('isManager') === 'true';
+
+      if (isAdmin) {
+        // Admin special navbar
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <a href="/admin.html" class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold transition shadow-lg">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                Admin Panel
+             </a>
+             <div class="flex items-center gap-2 px-3 py-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                <span class="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase">GOLD LICENSE</span>
+             </div>
+          </div>
+        `;
+      } else if (isManager) {
+        // Manager special navbar
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <a href="/manager.html" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition shadow-lg">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                Manager Panel
+             </a>
+             <div class="flex items-center gap-2 px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase">SILVER LICENSE</span>
+             </div>
+          </div>
+        `;
+      } else if (token) {
+        // Check if user is a promoted manager
+        checkUserManagerAndSetNavbar(authSection);
+      } else {
+        // Redirect if not logged in
+        window.location.href = "/login.html";
+      }
+    });
+
+    async function loadProfilePhoto() {
+      const userId = parseInt(localStorage.getItem("user_id"));
+      if (!userId || isNaN(userId)) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/profile?user_id=${userId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+        });
+        if (res.ok) {
+           const data = await res.json();
+           if(data.profile_photo_path) {
+              const timestamp = new Date().getTime();
+              document.getElementById('profileIcon').src = data.profile_photo_path + '?t=' + timestamp;
+           }
+        }
+      } catch (err) {}
+    }
+    
+    async function checkUserManagerAndSetNavbar(authSection) {
+      const userId = parseInt(localStorage.getItem("user_id"));
+      if (!userId || isNaN(userId)) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/profile?user_id=${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.is_manager) {
+            // User is a promoted manager - show manager navbar (Silver license)
+            sessionStorage.setItem('isUserManager', 'true');
+            authSection.innerHTML = `
+              <div class="flex items-center gap-4">
+                 <a href="/manager.html" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition shadow-lg">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                    Manager Panel
+                 </a>
+                 <div class="flex items-center gap-2 px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                    <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase">SILVER LICENSE</span>
+                 </div>
+              </div>
+            `;
+          } else {
+            // Regular user navbar
+            authSection.innerHTML = `
+              <div class="flex items-center gap-4">
+                 <div class="text-right hidden sm:block">
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Operator</div>
+                    <div class="text-sm font-bold text-gray-900 dark:text-gray-100 font-display uppercase tracking-wide">Engineer</div>
+                 </div>
+                 <img id="profileIcon" src="${DEFAULT_AVATAR}" class="w-10 h-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:border-black dark:hover:border-white transition" onclick="window.location.href='/profile.html'">
+                 <button onclick="logout()" class="ml-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition p-2 border-l border-gray-200 dark:border-gray-600 pl-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                 </button>
+              </div>
+            `;
+            loadProfilePhoto();
+            checkLicense();
+          }
+        }
+      } catch (err) {
+        // Default to regular user on error
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <div class="text-right hidden sm:block">
+                <div class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Operator</div>
+                <div class="text-sm font-bold text-gray-900 dark:text-gray-100 font-display uppercase tracking-wide">Engineer</div>
+             </div>
+             <img id="profileIcon" src="${DEFAULT_AVATAR}" class="w-10 h-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:border-black dark:hover:border-white transition" onclick="window.location.href='/profile.html'">
+             <button onclick="logout()" class="ml-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition p-2 border-l border-gray-200 dark:border-gray-600 pl-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+             </button>
+          </div>
+        `;
+        loadProfilePhoto();
+        checkLicense();
+      }
+    }
+
+    function logout() {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = "/login.html";
+    }
+
+    function checkLicense() {
+        // BYPASS for Admin/Manager/User-Manager - they have special access
+        const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+        const isManager = sessionStorage.getItem('isManager') === 'true';
+        const isUserManager = sessionStorage.getItem('isUserManager') === 'true';
+        
+        if (isAdmin || isManager || isUserManager) {
+            console.log('Admin/Manager/User-Manager access - License bypassed');
+            return true; // Allow access without license check
+        }
+        
+        const isLicenseActive = localStorage.getItem("is_license_active") === "true";
+        // If license is NOT active in local storage, show the popup
+        // (Or strict check: if (!isLicenseActive) showLicensePopup())
+        // For now, adhering to the logic you had:
+        // window.addEventListener('load', () => { document.getElementById('license-overlay').classList.remove('hidden'); });
+        // NOTE: I kept your specific license modal logic below in the main script section.
+    }
+  </script>
+</head>
+
+<body class="bg-page dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans border-t-4 border-brand flex flex-col min-h-screen">
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <nav class="bg-surface dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-20 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-6 h-full flex justify-between items-center">
+        <a href="/" class="flex items-center gap-3 group">
+            <img src="/app/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] bg-black text-white hidden items-center justify-center font-display font-bold text-xl rounded group-hover:bg-brand transition shadow-sm">P</div>
+        </a>
+        
+        <div class="flex items-center gap-4">
+             <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition">
+                <svg id="sun-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="moon-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+            
+            <div id="auth-section"></div>
+        </div>
+    </div>
+  </nav>
+
+  <div class="bg-surface dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div class="px-6 py-10 max-w-7xl mx-auto">
+          <div class="flex flex-col md:flex-row justify-between items-center">
+              <div>
+                  <h2 class="font-display text-3xl md:text-4xl font-medium text-gray-900 dark:text-gray-100 tracking-tight uppercase">Hydraulic Motor Calculator</h2>
+              </div>
+              <div class="flex gap-2 mt-4 md:mt-0">
+                  <a href="/" class="text-sm font-semibold text-gray-500 hover:text-black dark:hover:text-white transition">Dashboard</a>
+                  <span class="text-gray-300">/</span>
+                  <span class="text-sm font-semibold text-brand">Hydraulic Motor</span>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div id="license-overlay" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex justify-center items-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-md w-full border border-gray-200 dark:border-gray-700">
+      <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          </div>
+          <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-gray-100">Activation Required</h2>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">Enter your license key to unlock the calculation engine.</p>
+      </div>
+      <input type="text" id="license-key-input" class="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 text-center font-mono tracking-widest focus:ring-2 focus:ring-brand focus:border-brand outline-none" placeholder="XXXX-XXXX-XXXX">
+      <button id="license-submit-btn" class="w-full bg-brand hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg transition duration-200 uppercase tracking-wide text-sm">
+        Activate Session
+      </button>
+      <p id="license-error" class="text-red-500 text-xs mt-3 text-center hidden font-bold">Invalid License Key</p>
+    </div>
+  </div>
+
+  <main class="flex-grow py-8 px-4 md:px-6">
+    <div class="max-w-7xl mx-auto relative">
+        
+        <div class="watermark-text" data-index="01"></div>
+
+        <div class="bg-surface dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative z-10">
+            
+            <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span class="font-display font-semibold uppercase text-gray-700 dark:text-gray-200">Calculation Mode</span>
+                </div>
+                <div class="flex gap-6">
+                    <label class="flex items-center cursor-pointer gap-2">
+                        <input type="radio" name="mode" value="calc_cc" checked class="accent-brand w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Pump & Motor (cc)</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer gap-2">
+                        <input type="radio" name="mode" value="calc_speed" class="accent-brand w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Speed (km/h)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <div class="space-y-6">
+                    <div class="border-l-4 border-green-600 pl-4">
+                        <h3 class="font-display text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wide">Vehicle Data</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Weight (t)</label><input class="input-field" id="weight" value="18.500" /></div>
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Axles (No)</label><input class="input-field" id="axles" value="2" /></div>
+                            
+                            <div id="target_speed_label" class="col-span-2"><label class="text-xs font-bold text-brand mb-1 block">Target Speed (km/h)</label><input class="input-field border-brand/50 bg-blue-50/50 dark:bg-blue-900/10" id="speed" value="35" /></div>
+                            
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Max RPM</label><input class="input-field" id="vehicle_rpm" value="2700" /></div>
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">PTO Ratio</label><input class="input-field" id="pto_ratio" value="1" /></div>
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Eng. Box Ratio</label><input class="input-field" id="engine_ratio" value="3.5" /></div>
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Axle Box Ratio</label><input class="input-field" id="axle_ratio" value="5.1" /></div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-l-4 border-blue-500 pl-4 pt-2">
+                        <h3 class="font-display text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wide">Track Parameters</h3>
+                        <div class="grid grid-cols-3 gap-2">
+                             <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Slope (%)</label><input class="input-field" id="slope" value="0.0" /></div>
+                             <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Curve (°)</label><input class="input-field" id="curve" value="0.0" /></div>
+                             <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Wheel (mm)</label><input class="input-field" id="wheel_dia" value="560" /></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="border-l-4 border-orange-500 pl-4">
+                        <h3 class="font-display text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wide">Hydraulic Motor</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Total Motors</label><input class="input-field" id="num_motors" value="2" /></div>
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Motor/Axle</label><input class="input-field" id="per_axle_motor" value="1" /></div>
+                            
+                            <div id="pressure_label"><label class="text-xs font-bold text-brand mb-1 block">Pressure (bar)</label><input class="input-field border-brand/50 bg-blue-50/50 dark:bg-blue-900/10" id="pressure" value="150" /></div>
+                            <div id="mech_eff_label"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Mech Eff (%)</label><input class="input-field" id="mech_eff" value="95" /></div>
+                            
+                            <div class="col-span-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Vol Eff (%)</label><input class="input-field" id="vol_eff_motor" value="95" /></div>
+
+                            <div id="motor_displacement_label" class="col-span-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Displacement (cc)</label><input class="input-field" id="motor_displacement" value="28" /></div>
+                            <div id="max_motor_rpm_label" class="col-span-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Max Motor RPM</label><input class="input-field" id="max_motor_rpm" value="3000" /></div>
+                        </div>
+                    </div>
+
+                    <div class="border-l-4 border-purple-600 pl-4 pt-2">
+                        <h3 class="font-display text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wide">Pump Spec</h3>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Vol Eff (%)</label><input class="input-field" id="vol_eff_pump" value="95" /></div>
+                            <div id="pump_displacement_label"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Displacement (cc)</label><input class="input-field" id="pump_displacement" value="65" /></div>
+                            <div id="max_pump_rpm_label"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Max Pump RPM</label><input class="input-field" id="max_pump_rpm" value="3000" /></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col h-full">
+                    <div class="space-y-3 mb-6">
+                        <button id="calculateBtn" class="w-full bg-brand hover:bg-blue-800 text-white font-display font-semibold py-4 rounded shadow-lg hover:shadow-xl transition-all uppercase tracking-wider flex items-center justify-center gap-2">
+                            <span>Execute Calculation</span>
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                        <button id="saveDocBtn" class="w-full bg-white dark:bg-gray-700 border-2 border-green-600 text-green-700 dark:text-green-500 hover:bg-green-50 dark:hover:bg-gray-600 font-display font-semibold py-3 rounded transition-all uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                            Export Report (.docx)
+                        </button>
+                        <button id="historyBtn" onclick="openHistoryModal()" class="w-full bg-white dark:bg-gray-700 border-2 border-purple-600 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-gray-600 font-display font-semibold py-3 rounded transition-all uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            History
+                        </button>
+                    </div>
+
+                    <div class="flex-grow bg-black rounded-lg border border-gray-800 p-4 font-mono text-sm shadow-inner relative overflow-hidden group">
+                        <div class="absolute top-0 left-0 w-full h-6 bg-gray-900 border-b border-gray-800 flex items-center px-2 gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                            <span class="ml-2 text-[10px] text-gray-500">output_log.txt</span>
+                        </div>
+                        <pre id="resultsBox" class="mt-4 text-green-400 h-[400px] overflow-auto whitespace-pre-wrap leading-relaxed pb-4">
+> System Ready.
+> Waiting for input parameters...
+                        </pre>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+  </main>
+
+  <!-- Save Calculation Name Modal -->
+  <div id="saveNameModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-xl font-display font-bold text-gray-900 dark:text-gray-100">Save Calculation</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Give your calculation a name for easy reference</p>
+      </div>
+      <div class="p-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Calculation Name</label>
+        <input type="text" id="calculationNameInput" class="input-field" placeholder="e.g., EN-20 Hydraulic Test" maxlength="100">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Leave empty for auto-generated name</p>
+      </div>
+      <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+        <button onclick="skipSaveName()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+          Skip
+        </button>
+        <button onclick="confirmSaveName()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div id="historyModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-gray-200 dark:border-gray-700">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <div>
+          <h3 class="text-xl font-display font-bold text-gray-900 dark:text-gray-100">Calculation History</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Click on any calculation to load it</p>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-2">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div id="historyList" class="flex-1 overflow-y-auto p-4 space-y-2">
+        <div class="text-center text-gray-500 py-8">Loading history...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename History Item Modal -->
+  <div id="renameHistoryModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <h3 class="text-xl font-display font-bold text-gray-900 dark:text-gray-100">Rename Calculation</h3>
+        <button onclick="closeRenameHistoryModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-2">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Name</label>
+        <input type="text" id="renameHistoryInput" placeholder="Enter new name (e.g., EN-20 Project)"
+               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+        <input type="hidden" id="renameHistoryId">
+        <div class="flex gap-3 mt-6">
+          <button onclick="submitRenameHistory()" class="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+            Save Name
+          </button>
+          <button onclick="closeRenameHistoryModal()" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // --- API CONFIGURATION ---
+    // Change this for production deployment
+    const API_BASE_URL = window.location.origin;
+    
+    // --- VARIABLES ---
+    let lastInputData = null; 
+
+    // --- TOAST FUNCTION ---
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+      toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    // --- LICENSE MODAL LOGIC (Triggered if needed) ---
+    // Note: In a real app, you might check a 'valid_license' flag from the backend
+    window.addEventListener('load', () => {
+        // Uncomment the line below to FORCE the license popup on every load for testing
+        // document.getElementById('license-overlay').classList.remove('hidden');
+    });
+
+    const licenseOverlay = document.getElementById('license-overlay');
+    const licenseSubmitBtn = document.getElementById('license-submit-btn');
+    const licenseInput = document.getElementById('license-key-input');
+    const licenseError = document.getElementById('license-error');
+
+    licenseSubmitBtn.addEventListener('click', () => {
+      if (licenseInput.value.trim() === '8520-8520-8520') {
+        licenseOverlay.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => { licenseOverlay.style.display = 'none'; }, 500);
+      } else {
+        licenseError.classList.remove('hidden');
+      }
+    });
+
+    // --- TOGGLE INPUTS BASED ON MODE ---
+    function toggleInputs() {
+      const selectedMode = document.querySelector('input[name="mode"]:checked').value;
+      const mode1_ids = ['target_speed_label', 'pressure_label', 'mech_eff_label'];
+      const mode2_ids = ['motor_displacement_label', 'max_motor_rpm_label', 'pump_displacement_label', 'max_pump_rpm_label'];
+      
+      const motorDispInput = document.getElementById('motor_displacement');
+      const pumpDispInput = document.getElementById('pump_displacement');
+      const maxMotorRpmInput = document.getElementById('max_motor_rpm');
+      const maxPumpRpmInput = document.getElementById('max_pump_rpm');
+
+      const speedInput = document.getElementById('speed');
+      const pressureInput = document.getElementById('pressure');
+      const mechEffInput = document.getElementById('mech_eff');
+
+      if (selectedMode === 'calc_cc') {
+        mode1_ids.forEach(id => document.getElementById(id).style.display = 'block');
+        mode2_ids.forEach(id => document.getElementById(id).style.display = 'none');
+        [motorDispInput, pumpDispInput, maxMotorRpmInput, maxPumpRpmInput].forEach(el => el.disabled = true);
+        [speedInput, pressureInput, mechEffInput].forEach(el => el.disabled = false);
+      } else { 
+        mode1_ids.forEach(id => document.getElementById(id).style.display = 'none');
+        mode2_ids.forEach(id => document.getElementById(id).style.display = 'block');
+        [motorDispInput, pumpDispInput, maxMotorRpmInput, maxPumpRpmInput].forEach(el => el.disabled = false);
+        [speedInput, pressureInput, mechEffInput].forEach(el => el.disabled = true);
+      }
+    }
+
+    // --- COLLECT DATA ---
+    function collectRawData() {
+        return {
+            calc_mode: document.querySelector('input[name="mode"]:checked').value,
+            weight: document.getElementById('weight').value,
+            axles: document.getElementById('axles').value,
+            speed: document.getElementById('speed').value,
+            max_vehicle_rpm: document.getElementById('vehicle_rpm').value,
+            pto_gear_ratio: document.getElementById('pto_ratio').value,
+            engine_gear_ratio: document.getElementById('engine_ratio').value,
+            axle_gear_box_ratio: document.getElementById('axle_ratio').value,
+            slope_percent: document.getElementById('slope').value,
+            curve_degree: document.getElementById('curve').value,
+            wheel_diameter: document.getElementById('wheel_dia').value,
+            num_motors: document.getElementById('num_motors').value,
+            per_axle_motor: document.getElementById('per_axle_motor').value,
+            pressure: document.getElementById('pressure').value,
+            mech_eff_motor: document.getElementById('mech_eff').value,
+            vol_eff_motor: document.getElementById('vol_eff_motor').value,
+            motor_disp_in: document.getElementById('motor_displacement').value,
+            max_motor_rpm: document.getElementById('max_motor_rpm').value,
+            vol_eff_pump: document.getElementById('vol_eff_pump').value,
+            pump_disp_in: document.getElementById('pump_displacement').value,
+            max_pump_rpm: document.getElementById('max_pump_rpm').value
+        };
+    }
+    
+    // --- API CALL ---
+    async function handleCalculateClick() {
+      const resultsBox = document.getElementById("resultsBox");
+      resultsBox.textContent = "> Calculating parameters...\n> Connecting to Engineering Core...";
+
+      const rawData = collectRawData();
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/calculate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rawData),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Unknown error");
+        }
+
+        resultsBox.textContent = data.report;
+        lastInputData = rawData; 
+
+        // Prompt user for calculation name before saving
+        promptSaveCalculation(rawData, data);
+
+      } catch (error) {
+        console.error("Fetch Error:", error);
+        resultsBox.textContent = `> FATAL ERROR\n> ${error.message}\n> Check server connection.`;
+        lastInputData = null;
+      }
+    }
+
+    // --- DOWNLOAD DOC ---
+    async function handleSaveDocumentClick() {
+        const resultsBox = document.getElementById("resultsBox");
+        
+        if (!lastInputData) {
+            resultsBox.textContent += "\n\n> ERROR: No calculation data found. Run calculation first.";
+            return;
+        }
+
+        resultsBox.textContent += "\n> Generating report document...";
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/download_report`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(lastInputData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || "Failed to download file");
+            }
+
+            const blob = await response.blob();
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = "Report.docx";
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (filenameMatch && filenameMatch.length > 1) {
+                    filename = filenameMatch[1];
+                }
+            }
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+
+            resultsBox.textContent += "\n> Download initiated successfully.";
+
+        } catch (error) {
+            console.error("Download Error:", error);
+            resultsBox.textContent += `\n> DOWNLOAD FAILED: ${error.message}`;
+        }
+    }
+
+    // --- INIT LISTENERS ---
+    document.getElementById("calculateBtn").addEventListener("click", handleCalculateClick);
+    document.getElementById("saveDocBtn").addEventListener("click", handleSaveDocumentClick);
+    document.querySelectorAll('input[name="mode"]').forEach(radio => radio.addEventListener('change', toggleInputs));
+
+    // Run on load
+    toggleInputs();
+
+    // --- HISTORY FUNCTIONS ---
+    const TOOL_NAME = 'hydraulic';
+    let pendingInputs = null;
+    let pendingResults = null;
+
+    async function saveCalculationToHistory(inputs, results, calcName = null) {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) return;
+
+      try {
+        const payload = {
+          user_id: parseInt(userId),
+          tool_name: TOOL_NAME,
+          inputs: inputs,
+          results: results
+        };
+        if (calcName) {
+          payload.calculation_name = calcName;
+        }
+        await fetch(`${API_BASE_URL}/history/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.error('Failed to save history:', err);
+      }
+    }
+
+    function promptSaveCalculation(inputs, results) {
+      pendingInputs = inputs;
+      pendingResults = results;
+      document.getElementById('calculationNameInput').value = '';
+      document.getElementById('saveNameModal').classList.remove('hidden');
+    }
+
+    function skipSaveName() {
+      document.getElementById('saveNameModal').classList.add('hidden');
+      if (pendingInputs && pendingResults) {
+        saveCalculationToHistory(pendingInputs, pendingResults);
+        showToast('Calculation saved to history', 'success');
+      }
+      pendingInputs = null;
+      pendingResults = null;
+    }
+
+    function confirmSaveName() {
+      const name = document.getElementById('calculationNameInput').value.trim();
+      document.getElementById('saveNameModal').classList.add('hidden');
+      if (pendingInputs && pendingResults) {
+        saveCalculationToHistory(pendingInputs, pendingResults, name || null);
+        showToast(name ? `Saved as "${name}"` : 'Calculation saved to history', 'success');
+      }
+      pendingInputs = null;
+      pendingResults = null;
+    }
+
+    async function openHistoryModal() {
+      document.getElementById('historyModal').classList.remove('hidden');
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '<div class="text-center text-gray-500 py-8">Loading history...</div>';
+
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        historyList.innerHTML = '<div class="text-center text-red-500 py-8">Please login to view history</div>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/history/list?user_id=${userId}&tool_name=${TOOL_NAME}`);
+        const data = await res.json();
+
+        if (data.length === 0) {
+          historyList.innerHTML = '<div class="text-center text-gray-500 py-8">No calculations saved yet</div>';
+          return;
+        }
+
+        historyList.innerHTML = data.map(item => {
+          const inp = item.inputs || {};
+          const preview = `Force: ${inp.force || '-'} kN | Stroke: ${inp.stroke || '-'} mm | Pressure: ${inp.pressure || '-'} bar`;
+          const escapedName = (item.calculation_name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          return `
+          <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition border border-gray-200 dark:border-gray-600 hover:border-purple-400">
+            <div class="flex justify-between items-center">
+              <div class="flex-1 cursor-pointer" onclick="loadCalculation(${item.id})">
+                <h4 class="font-semibold text-gray-900 dark:text-gray-100">${item.calculation_name}</h4>
+                <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">${preview}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${item.created_at}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="event.stopPropagation(); openRenameHistoryModal(${item.id}, '${escapedName}')" class="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition" title="Rename">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </button>
+                <svg class="w-5 h-5 text-purple-600 cursor-pointer" onclick="loadCalculation(${item.id})" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              </div>
+            </div>
+          </div>
+        `}).join('');
+
+      } catch (err) {
+        historyList.innerHTML = '<div class="text-center text-red-500 py-8">Failed to load history</div>';
+      }
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.add('hidden');
+    }
+
+        // Rename history item functions
+        function openRenameHistoryModal(calcId, currentName) {
+            document.getElementById('renameHistoryId').value = calcId;
+            document.getElementById('renameHistoryInput').value = currentName;
+            document.getElementById('renameHistoryModal').classList.remove('hidden');
+            document.getElementById('renameHistoryInput').focus();
+            document.getElementById('renameHistoryInput').select();
+        }
+
+        function closeRenameHistoryModal() {
+            document.getElementById('renameHistoryModal').classList.add('hidden');
+            document.getElementById('renameHistoryId').value = '';
+            document.getElementById('renameHistoryInput').value = '';
+        }
+
+        async function submitRenameHistory() {
+            const calcId = document.getElementById('renameHistoryId').value;
+            const newName = document.getElementById('renameHistoryInput').value.trim();
+
+            if (!newName) {
+                showToast('Please enter a name', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/history/rename/${calcId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ calculation_name: newName })
+                });
+
+                if (res.ok) {
+                    showToast('Calculation renamed successfully!', 'success');
+                    closeRenameHistoryModal();
+                    // Refresh history list
+                    openHistoryModal();
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || 'Failed to rename', 'error');
+                }
+            } catch (err) {
+                console.error('Rename error:', err);
+                showToast('Failed to rename calculation', 'error');
+            }
+        }
+
+    async function loadCalculation(calcId) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/history/detail/${calcId}`);
+        const data = await res.json();
+
+        // Fill form with saved inputs
+        const inputs = data.inputs;
+        if (inputs.calc_mode) {
+          document.querySelector(`input[name="mode"][value="${inputs.calc_mode}"]`).checked = true;
+          toggleInputs();
+        }
+        if (inputs.weight) document.getElementById('weight').value = inputs.weight;
+        if (inputs.axles) document.getElementById('axles').value = inputs.axles;
+        if (inputs.speed) document.getElementById('speed').value = inputs.speed;
+        if (inputs.max_vehicle_rpm) document.getElementById('vehicle_rpm').value = inputs.max_vehicle_rpm;
+        if (inputs.pto_gear_ratio) document.getElementById('pto_ratio').value = inputs.pto_gear_ratio;
+        if (inputs.engine_gear_ratio) document.getElementById('engine_ratio').value = inputs.engine_gear_ratio;
+        if (inputs.axle_gear_box_ratio) document.getElementById('axle_ratio').value = inputs.axle_gear_box_ratio;
+        if (inputs.slope_percent) document.getElementById('slope').value = inputs.slope_percent;
+        if (inputs.curve_degree) document.getElementById('curve').value = inputs.curve_degree;
+        if (inputs.wheel_diameter) document.getElementById('wheel_dia').value = inputs.wheel_diameter;
+        if (inputs.num_motors) document.getElementById('num_motors').value = inputs.num_motors;
+        if (inputs.per_axle_motor) document.getElementById('per_axle_motor').value = inputs.per_axle_motor;
+        if (inputs.pressure) document.getElementById('pressure').value = inputs.pressure;
+        if (inputs.mech_eff_motor) document.getElementById('mech_eff').value = inputs.mech_eff_motor;
+        if (inputs.vol_eff_motor) document.getElementById('vol_eff_motor').value = inputs.vol_eff_motor;
+        if (inputs.motor_disp_in) document.getElementById('motor_displacement').value = inputs.motor_disp_in;
+        if (inputs.max_motor_rpm) document.getElementById('max_motor_rpm').value = inputs.max_motor_rpm;
+        if (inputs.vol_eff_pump) document.getElementById('vol_eff_pump').value = inputs.vol_eff_pump;
+        if (inputs.pump_disp_in) document.getElementById('pump_displacement').value = inputs.pump_disp_in;
+        if (inputs.max_pump_rpm) document.getElementById('max_pump_rpm').value = inputs.max_pump_rpm;
+
+        // Show saved results
+        if (data.results && data.results.report) {
+          document.getElementById('resultsBox').textContent = data.results.report;
+        }
+
+        lastInputData = inputs;
+        closeHistoryModal();
+
+      } catch (err) {
+        console.error('Failed to load calculation:', err);
+      }
+    }
+  </script>
+
+  <!-- FOOTER -->
+  <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto py-8">
+      <div class="px-6 flex flex-col md:flex-row justify-between items-center">
+          <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+      </div>
+  </footer>
+</body>
+</html>

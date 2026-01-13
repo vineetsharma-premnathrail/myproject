@@ -1,0 +1,53 @@
+# =========================================
+# Procfile for Heroku/Render Deployment
+# =========================================
+# Process definition file for cloud platform deployment (Heroku, Render, etc.).
+#
+# Purpose: Defines the production process types and commands for running the
+# Engineering SaaS Platform on cloud platforms that support Procfiles. Specifies
+# how the web application should be started with proper production configuration.
+#
+# Architecture Overview:
+# - Single web process definition for the main application
+# - Gunicorn WSGI server with Uvicorn ASGI workers for FastAPI
+# - Environment variable port binding for cloud platform flexibility
+# - Production-optimized worker configuration
+#
+# Process Types:
+# - web: Main web application process (required for web apps)
+# - worker: Background job processing (not currently used)
+# - release: One-time setup tasks before deployment (not currently used)
+#
+# Production Configuration:
+# - Gunicorn: Robust WSGI server for production workloads
+# - Uvicorn workers: ASGI support for FastAPI async capabilities
+# - Host binding: 0.0.0.0 for external accessibility in containers
+# - Port binding: Environment variable for cloud platform assignment
+#
+# Scaling Considerations:
+# - Single web process suitable for small to medium applications
+# - Can be scaled horizontally by cloud platform (multiple dynos/containers)
+# - Worker processes can be added for background task processing if needed
+#
+# Environment Variables:
+# - PORT: Cloud platform assigned port (required)
+# - Other variables: Database URLs, API keys, etc. (configured separately)
+#
+# Deployment Platforms:
+# - Heroku: Native Procfile support with dyno management
+# - Render: Procfile support for web service configuration
+# - Other: Platforms supporting Procfile standard (Dokku, etc.)
+#
+# Command Structure:
+# - gunicorn: WSGI server executable
+# - main:app: FastAPI application instance (main.py module, app object)
+# - -k uvicorn.workers.UvicornWorker: ASGI worker class for FastAPI
+# - --bind "0.0.0.0:${PORT}": Host and port binding configuration
+
+# ========================================================================================
+# WEB PROCESS DEFINITION
+# ========================================================================================
+# Main web application process for handling HTTP requests
+# Uses Gunicorn as the WSGI server with Uvicorn workers for FastAPI ASGI support
+# Binds to all interfaces (0.0.0.0) on the port provided by the cloud platform ($PORT)
+web: gunicorn main:app -k uvicorn.workers.UvicornWorker --bind "0.0.0.0:${PORT}"

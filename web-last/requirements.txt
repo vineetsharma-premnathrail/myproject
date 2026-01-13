@@ -1,0 +1,82 @@
+# =========================================
+# Python Dependencies for Premnath Engineering Calculator SaaS
+# =========================================
+# Comprehensive package manifest for the Engineering SaaS Platform.
+#
+# Purpose: Defines all Python package dependencies required for the application
+# to function properly. Includes web framework, data processing, database connectivity,
+# security, PDF generation, and supporting libraries for the engineering platform.
+#
+# Installation: pip install -r requirements.txt
+# Development: pip install -r requirements.txt --upgrade
+# Production: Use pinned versions for reproducible deployments
+#
+# Architecture Overview:
+# - FastAPI ecosystem for modern web API development
+# - Scientific computing stack for engineering calculations
+# - Database connectivity with ORM abstraction
+# - Security and authentication components
+# - Document generation and file processing capabilities
+#
+# Package Categories:
+# - Web Framework: FastAPI, Uvicorn, Gunicorn for API serving
+# - Data Processing: NumPy, Pandas for numerical computations
+# - Visualization: Matplotlib for charts and engineering plots
+# - Document Generation: ReportLab, python-docx for reports
+# - Database: SQLAlchemy, psycopg2 for PostgreSQL connectivity
+# - Security: PassLib, bcrypt for password hashing
+# - Email: email-validator for user communication validation
+# - Configuration: Pydantic-settings for environment management
+#
+# Version Pinning Strategy:
+# - Major versions pinned for API stability
+# - Minor versions allowed to float for security updates
+# - Critical security packages (bcrypt) fully pinned
+# - Development tools unpinned for latest features
+#
+# Security Considerations:
+# - Use trusted package sources (PyPI)
+# - Regularly audit for vulnerabilities
+# - Keep dependencies updated for security patches
+# - Use virtual environments for isolation
+#
+# Performance Notes:
+# - NumPy/Pandas for efficient numerical operations
+# - SQLAlchemy connection pooling for database efficiency
+# - Gunicorn for production WSGI serving
+# - Uvicorn for ASGI async capabilities
+
+# ============ WEB FRAMEWORK ============
+fastapi  # Modern, fast web framework for building APIs with automatic OpenAPI docs
+uvicorn  # ASGI server for running FastAPI applications with async support
+gunicorn  # WSGI HTTP Server for production deployment with process management
+
+# ============ DATA PROCESSING & COMPUTATION ============
+matplotlib  # Plotting library for generating charts and engineering graphs
+python-docx  # Library for creating and updating Microsoft Word (.docx) files
+jinja2  # Template engine for generating dynamic content and reports
+pandas  # Data manipulation and analysis library for calculation results
+numpy  # Fundamental package for array computing and mathematical operations
+
+# ============ FILE HANDLING & UPLOADS ============
+python-multipart  # Support for multipart/form-data (file uploads) in FastAPI
+
+# ============ DATABASE CONNECTIVITY ============
+sqlalchemy  # SQL toolkit and Object-Relational Mapping (ORM) for database abstraction
+psycopg2-binary  # PostgreSQL database adapter for Python with C extensions
+
+# ============ AUTHENTICATION & SECURITY ============
+passlib  # Password hashing library with multiple algorithm support
+bcrypt==3.2.0  # Specific version of bcrypt for secure password hashing
+
+# ============ PDF & DOCUMENT GENERATION ============
+reportlab  # Library for programmatically creating PDFs with vector graphics
+
+# ============ CONFIGURATION MANAGEMENT ============
+pydantic-settings  # Settings management using Python type annotations and validation
+
+# ============ EMAIL VALIDATION ============
+email-validator  # Email address validation library with SMTP checking
+
+# ============ DATABASE MIGRATIONS ============
+alembic  # Database migration tool for SQLAlchemy schema versioning and updates

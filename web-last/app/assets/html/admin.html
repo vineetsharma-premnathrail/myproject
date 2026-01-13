@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<!-- ========================================================================================
+     ADMIN PANEL - Premnath Engineering Works
+     ================================================================================
+     Purpose: Administrative dashboard for system management and user control
+     Framework: Static HTML with Tailwind CSS and vanilla JavaScript
+     Features: User management, license key generation, messaging system, calculation monitoring
+     Dependencies: Tailwind CSS (CDN), Font Awesome icons, Google Fonts (Inter, Oswald)
+     Security: JWT-based authentication, role-based access control (Admin only)
+     Responsive: Mobile-first design with dark mode support
+     ================================================================================ -->
+<html lang="en">
+<!-- HTML root element with language set to English for accessibility and SEO -->
+<head>
+    <!-- ========================================================================================
+         DOCUMENT HEAD - Metadata and External Resources
+         ================================================================================
+         Contains: Character encoding, viewport settings, page title, CSS frameworks,
+         custom styles, and font loading for the admin panel interface
+         ================================================================================ -->
+    <meta charset="UTF-8">
+    <!-- Character encoding declaration - ensures proper display of special characters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Responsive viewport meta tag - enables mobile-friendly scaling and layout -->
+    <title>Admin Panel - Premnath Engineering</title>
+    <!-- Page title displayed in browser tab and bookmarks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS framework loaded from CDN - provides utility-first CSS classes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome icon library - provides scalable vector icons for UI elements -->
+    <!-- ========================================================================================
+         TAILWIND CONFIGURATION - Custom Theme Settings
+         ================================================================================
+         Configures: Dark mode support, custom font families for consistent typography
+         Fonts: Inter (sans-serif) for body text, Oswald (display) for headings
+         ================================================================================ -->
+    <script>
+        // Tailwind CSS configuration object for custom theme extensions
+        tailwind.config = {
+            darkMode: 'class', // Enables dark mode using CSS class toggling
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'], // Default sans-serif font for body text
+                        display: ['Oswald', 'sans-serif'], // Display font for headings and branding
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- ========================================================================================
+         GOOGLE FONTS - Typography Loading
+         ================================================================================
+         Loads: Inter font family (weights 300-700) for UI text, Oswald (weights 400,700) for headings
+         Purpose: Consistent typography across admin interface for professional appearance
+         ================================================================================ -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <!-- ========================================================================================
+         CUSTOM CSS STYLES - Admin Panel Specific Styling
+         ================================================================================
+         Contains: Sidebar navigation styles, stat card animations, table hover effects,
+         toast notification styling with animations for enhanced UX
+         ================================================================================ -->
+    <style>
+        /* ========================================================================================
+             SIDEBAR NAVIGATION STYLES
+             ================================================================================ */
+        .sidebar-link.active { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+        /* Active sidebar link styling with blue gradient background and white text */
+
+        /* ========================================================================================
+             STAT CARD ANIMATIONS
+             ================================================================================ */
+        .stat-card { transition: all 0.3s; }
+        /* Smooth transition for all stat card properties */
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        /* Hover effect: lifts card up and adds shadow for depth perception */
+
+        /* ========================================================================================
+             TABLE ROW HOVER EFFECTS
+             ================================================================================ */
+        .table-row:hover { background-color: #f8fafc; }
+        /* Light mode hover effect for table rows */
+        .dark .table-row:hover { background-color: #1e293b; }
+        /* Dark mode hover effect for table rows with appropriate contrast */
+
+        /* ========================================================================================
+             TOAST NOTIFICATION SYSTEM
+             ================================================================================
+             Purpose: Non-intrusive notification system for user feedback
+             Features: Fixed positioning, slide animations, multiple notification types
+             ================================================================================ */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        /* Fixed position container for toast notification positioning and layout */
+        .toast { padding: 14px 20px; border-radius: 8px; color: white; font-weight: 500; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 350px; }
+        /* Individual toast notification styling */
+
+        /* Toast type variants with gradient backgrounds */
+        .toast.success { background: linear-gradient(135deg, #10b981, #059669); }
+        /* Green gradient for success notifications */
+        .toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        /* Red gradient for error notifications */
+        .toast.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        /* Orange gradient for warning notifications */
+        .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        /* Blue gradient for informational notifications */
+
+        /* ========================================================================================
+             TOAST ANIMATIONS
+             ================================================================================ */
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        /* Slide-in animation from right side with fade-in effect */
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        /* Slide-out animation to right side with fade-out effect */
+    </style>
+    <link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+    <script>
+        // Immediate redirect for non-admin users: block access to admin page
+        try {
+            const isAdmin = sessionStorage.getItem('isAdmin');
+            // If not explicitly logged in as admin, redirect to public index
+            if (isAdmin !== 'true') {
+                // Clear any residual admin data and stop possible polling
+                try { sessionStorage.removeItem('isAdmin'); } catch(e){}
+                try { sessionStorage.removeItem('adminEmail'); } catch(e){}
+                try { localStorage.removeItem('adminName'); localStorage.removeItem('adminPhoto'); } catch(e){}
+                // Navigate to public index and replace history so Back cannot return to admin
+                location.replace('/');
+            }
+        } catch (err) {
+            // If any error, ensure redirect to safety
+            try { location.replace('/'); } catch(e){}
+        }
+    </script>
+    <!-- ========================================================================================
+         MAIN BODY - Admin Panel Interface Container
+         ================================================================================
+         Contains: Toast notification system, login screen, and main dashboard layout
+         Features: Dark mode support, responsive design, authentication flow
+         Layout: Flexbox-based with sidebar navigation and content areas
+         ================================================================================ -->
+
+    <!-- ========================================================================================
+         TOAST NOTIFICATION CONTAINER
+         ================================================================================
+         Purpose: Display non-intrusive notifications for user feedback
+         Features: Fixed positioning, auto-dismiss, multiple notification types
+         ================================================================================ -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ========================================================================================
+         LOGIN SCREEN - Admin Authentication Interface
+         ================================================================================
+         Purpose: Secure admin login with email/password authentication
+         Features: Form validation, error handling, responsive design
+         Security: Client-side validation, server-side JWT authentication
+         ================================================================================ -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <!-- Full screen login overlay with centered content -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md">
+            <!-- Login card with white/dark background and shadow -->
+            <div class="text-center mb-8">
+                <!-- ========================================================================================
+                     LOGIN HEADER - Branding and Welcome Section
+                     ================================================================================ -->
+                <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <!-- Blue circular icon container for branding -->
+                    <i class="fas fa-shield-alt text-3xl text-white"></i>
+                    <!-- Shield icon representing admin/security access -->
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Admin Panel</h1>
+                <!-- Main heading for admin login -->
+                <p class="text-gray-500 dark:text-gray-400 mt-2">Premnath Engineering Works</p>
+                <!-- Company branding subtitle -->
+            </div>
+
+            <!-- ========================================================================================
+                 LOGIN FORM - Admin Authentication Form
+                 ================================================================================
+                 Purpose: Secure admin login with email/password validation
+                 Features: Client-side validation, error handling, accessibility support
+                 Security: Required fields, input sanitization, secure password handling
+                 ================================================================================ -->
+            <form id="loginForm" class="space-y-6">
+                <!-- Login form with consistent vertical spacing -->
+
+                <!-- ========================================================================================
+                     EMAIL INPUT FIELD
+                     ================================================================================ -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Admin Email</label>
+                    <!-- Accessible label for email input -->
+                    <input type="email" id="adminEmail" required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="admin@premnathengineering.com"
+                           title="Enter your admin email address">
+                    <!-- Email input with validation, dark mode support, and focus states -->
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Use your registered admin email</p>
+                    <!-- Helper text for user guidance -->
+                </div>
+
+                <!-- ========================================================================================
+                     PASSWORD INPUT FIELD
+                     ================================================================================ -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                    <!-- Accessible label for password input -->
+                    <input type="password" id="adminPassword" required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter your password"
+                           title="Enter your admin password">
+                    <!-- Password input with secure type and styling -->
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum 8 characters required</p>
+                    <!-- Password requirements helper text -->
+                </div>
+
+                <!-- ========================================================================================
+                     LOGIN SUBMIT BUTTON
+                     ================================================================================ -->
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2">
+                    <!-- Submit button with hover effects and icon -->
+                    <i class="fas fa-sign-in-alt"></i> Login to Admin Panel
+                    <!-- Login icon and descriptive text -->
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <!-- Back to Home link removed for admin login page -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================================================================
+         ADMIN DASHBOARD - Main Administrative Interface
+         ================================================================================
+         Purpose: Complete admin control panel for system management
+         Features: User management, license keys, messaging, calculation monitoring
+         Layout: Header navbar, sidebar navigation, main content area
+         Security: Hidden by default, shown only after successful authentication
+         ================================================================================ -->
+    <div id="adminDashboard" class="hidden min-h-screen flex flex-col">
+        <!-- ========================================================================================
+             HEADER NAVBAR - Top Navigation Bar
+             ================================================================================
+             Purpose: Branding, navigation controls, and user profile display
+             Features: Sticky positioning, responsive design, dark mode toggle
+             Layout: Logo on left, controls on right, centered content
+             ================================================================================ -->
+        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-20 sticky top-0 z-50">
+            <!-- Sticky header with white/dark background and bottom border -->
+            <div class="max-w-7xl mx-auto px-6 h-full flex justify-between items-center">
+                <!-- Centered container with max width and flexbox layout -->
+
+                <!-- ========================================================================================
+                     COMPANY LOGO - Navigation to Homepage
+                     ================================================================================ -->
+                <a href="/" class="flex items-center gap-3 group">
+                    <!-- Logo link to homepage with hover effects -->
+                    <img src="/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <!-- Company logo image with responsive sizing and hover effects -->
+                    <div class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] bg-black text-white hidden items-center justify-center font-display font-bold text-xl rounded group-hover:bg-blue-700 transition shadow-sm">P</div>
+                    <!-- Fallback logo text if image fails to load -->
+                </a>
+
+                <!-- ========================================================================================
+                     HEADER CONTROLS - Dark Mode and Profile
+                     ================================================================================ -->
+                <div class="flex items-center gap-4">
+                    <!-- Right side header controls container -->
+
+                    <!-- ========================================================================================
+                         DARK MODE TOGGLE
+                         ================================================================================ -->
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition">
+                        <!-- Dark mode toggle button with hover effects -->
+                        <svg id="sun-icon-admin" class="w-5 h-5 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <!-- Sun icon for light mode indicator -->
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg id="moon-icon-admin" class="w-5 h-5 text-gray-800 dark:text-gray-200 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <!-- Moon icon for dark mode indicator -->
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+
+                    <!-- ========================================================================================
+                         ADMIN PROFILE DISPLAY
+                         ================================================================================ -->
+                    <div class="flex items-center gap-3 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <!-- Admin profile display container -->
+                        <img id="adminProfilePhoto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Ccircle cx='12' cy='12' r='12' fill='%233b82f6'/%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' fill='%23ffffff'/%3E%3C/svg%3E" class="w-9 h-9 rounded-full object-cover border-2 border-blue-500">
+                        <!-- Admin profile photo/avatar with blue border -->
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Admin</span>
+                        <!-- Admin role label text -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ========================================================================================
+             MAIN LAYOUT - Sidebar and Content Area
+             ================================================================================
+             Layout: Flex container with fixed sidebar and flexible content area
+             Purpose: Responsive admin interface with navigation and main content
+             ================================================================================ -->
+        <div class="flex flex-1">
+            <!-- ========================================================================================
+                 SIDEBAR NAVIGATION - Admin Control Panel Menu
+                 ================================================================================
+                 Purpose: Primary navigation for admin functions and sections
+                 Features: Active state indicators, unread badges, tool access links
+                 Layout: Vertical menu with icons, collapsible sections, logout at bottom
+                 ================================================================================ -->
+            <aside class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+                <!-- Sidebar container with fixed width, background, and right border -->
+                <nav class="p-4 space-y-2 flex-1">
+                    <!-- Navigation container with padding and vertical spacing -->
+
+                    <!-- ========================================================================================
+                         DASHBOARD NAVIGATION
+                         ================================================================================ -->
+                    <button onclick="showSection('dashboard')" class="sidebar-link active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition" data-section="dashboard">
+                        <!-- Dashboard button - active by default -->
+                        <i class="fas fa-chart-pie w-5"></i> Dashboard
+                        <!-- Chart icon and navigation text -->
+                    </button>
+
+                    <!-- ========================================================================================
+                         MESSAGES NAVIGATION - With Unread Badge
+                         ================================================================================ -->
+                    <button onclick="showSection('messages')" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition relative" data-section="messages">
+                        <!-- Messages button with relative positioning for badge -->
+                        <i class="fas fa-comments w-5"></i> Messages
+                        <!-- Comments icon and navigation text -->
+                        <span id="adminUnreadBadge" class="hidden absolute right-3 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                        <!-- Unread messages notification badge -->
+                    </button>
+
+                    <!-- ========================================================================================
+                         USERS MANAGEMENT NAVIGATION
+                         ================================================================================ -->
+                    <button onclick="showSection('users')" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition" data-section="users">
+                        <!-- Users management button -->
+                        <i class="fas fa-users w-5"></i> Users
+                        <!-- Users icon and navigation text -->
+                    </button>
+
+                    <!-- ========================================================================================
+                         LICENSE KEYS NAVIGATION
+                         ================================================================================ -->
+                    <button onclick="showSection('licenses')" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition" data-section="licenses">
+                        <!-- License keys management button -->
+                        <i class="fas fa-key w-5"></i> License Keys
+                        <!-- Key icon and navigation text -->
+                    </button>
+
+                    <!-- ========================================================================================
+                         CALCULATIONS MONITORING NAVIGATION
+                         ================================================================================ -->
+                    <button onclick="showSection('calculations')" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition" data-section="calculations">
+                        <!-- Calculations monitoring button -->
+                        <i class="fas fa-calculator w-5"></i> Calculations
+                        <!-- Calculator icon and navigation text -->
+                    </button>
+
+                    <!-- ========================================================================================
+                         PROFILE MANAGEMENT NAVIGATION
+                         ================================================================================ -->
+                    <button onclick="showSection('profile')" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition" data-section="profile">
+                        <!-- Profile management button -->
+                        <i class="fas fa-user-cog w-5"></i> Profile
+                        <!-- User cog icon and navigation text -->
+                    </button>
+
+                    <!-- ========================================================================================
+                         TOOLS ACCESS LINK - Gold License Required
+                         ================================================================================ -->
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700 mt-2">
+                        <!-- Separator section for tools access -->
+                        <a href="/" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition font-semibold">
+                            <!-- Tools access link with gold license indicator -->
+                            <i class="fas fa-tools w-5"></i> Tools <span class="ml-auto text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">GOLD</span>
+                            <!-- Tools icon, text, and gold license badge -->
+                        </a>
+                    </div>
+
+                    <!-- ========================================================================================
+                         LOGOUT BUTTON - Bottom of Sidebar
+                         ================================================================================ -->
+                    <div class="!mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <!-- Logout section at bottom with top border -->
+                        <button onclick="adminLogout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                            <!-- Logout button with red styling and hover effects -->
+                            <i class="fas fa-sign-out-alt w-5"></i> Logout
+                            <!-- Sign out icon and text -->
+                        </button>
+                    </div>
+                </nav>
+            </aside>
+            
+            <!-- ========================================================================================
+                 MAIN CONTENT AREA - Dynamic Section Display
+                 ================================================================================
+                 Purpose: Displays different admin sections based on sidebar navigation
+                 Features: Section switching, responsive layout, dynamic content loading
+                 Layout: Flex column with gray background and padding
+                 ================================================================================ -->
+            <main class="flex-1 flex flex-col bg-gray-100 dark:bg-gray-900">
+                <!-- ========================================================================================
+                     DASHBOARD SECTION - Admin Overview and Statistics
+                     ================================================================================
+                     Purpose: Main dashboard with key metrics and quick actions
+                     Features: Statistics cards, quick action buttons, welcome information
+                     Data: Real-time user counts, license status, calculation metrics
+                     ================================================================================ -->
+                <section id="dashboardSection" class="p-8">
+                    <!-- ========================================================================================
+                         STATISTICS CARDS GRID - Key Metrics Display
+                         ================================================================================ -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Responsive grid for statistics cards -->
+
+                        <!-- ========================================================================================
+                             TOTAL USERS STATISTIC CARD
+                             ================================================================================ -->
+                        <div class="stat-card bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                            <!-- Statistics card with hover animations -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
+                                    <!-- Card title -->
+                                    <p id="statTotalUsers" class="text-3xl font-bold mt-1">-</p>
+                                    <!-- Dynamic user count display -->
+                                </div>
+                                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                                    <!-- Icon container with blue background -->
+                                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                                    <!-- Users icon -->
+                                </div>
+                            </div>
+                            <p class="text-xs text-green-600 mt-3"><i class="fas fa-arrow-up mr-1"></i><span id="statRecentSignups">0</span> new this week</p>
+                            <!-- Recent signups indicator -->
+                        </div>
+
+                        <!-- ========================================================================================
+                             ACTIVE LICENSES STATISTIC CARD
+                             ================================================================================ -->
+                        <div class="stat-card bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                            <!-- Statistics card for active licenses -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Active Licenses</p>
+                                    <!-- Card title -->
+                                    <p id="statActiveLicenses" class="text-3xl font-bold mt-1">-</p>
+                                    <!-- Dynamic active licenses count -->
+                                </div>
+                                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+                                    <!-- Icon container with green background -->
+                                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                                    <!-- Check circle icon -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========================================================================================
+                             AVAILABLE KEYS STATISTIC CARD
+                             ================================================================================ -->
+                        <div class="stat-card bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                            <!-- Statistics card for available license keys -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Available Keys</p>
+                                    <!-- Card title -->
+                                    <p id="statAvailableKeys" class="text-3xl font-bold mt-1">-</p>
+                                    <!-- Dynamic available keys count -->
+                                </div>
+                                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                                    <!-- Icon container with purple background -->
+                                    <i class="fas fa-key text-purple-600 text-xl"></i>
+                                    <!-- Key icon -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========================================================================================
+                             UNREAD MESSAGES STATISTIC CARD - Clickable
+                             ================================================================================ -->
+                        <div onclick="showSection('messages')" class="stat-card bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 cursor-pointer">
+                            <!-- Clickable statistics card that navigates to messages -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Unread Messages</p>
+                                    <!-- Card title -->
+                                    <p id="statUnreadMessages" class="text-3xl font-bold mt-1">-</p>
+                                    <!-- Dynamic unread messages count -->
+                                </div>
+                                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+                                    <!-- Icon container with red background -->
+                                    <i class="fas fa-envelope text-red-600 text-xl"></i>
+                                    <!-- Envelope icon -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================================================
+                         ADDITIONAL STATISTICS - Total Calculations
+                         ================================================================================ -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="stat-card bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                            <!-- Statistics card for total calculations performed -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Calculations</p>
+                                    <!-- Card title -->
+                                    <p id="statTotalCalculations" class="text-3xl font-bold mt-1">-</p>
+                                    <!-- Dynamic calculations count -->
+                                </div>
+                                <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                                    <!-- Icon container with orange background -->
+                                    <i class="fas fa-calculator text-orange-600 text-xl"></i>
+                                    <!-- Calculator icon -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================================================
+                         QUICK ACTIONS PANEL
+                         ================================================================================ -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                        <!-- Quick actions container -->
+                        <h3 class="font-bold mb-4">Quick Actions</h3>
+                        <!-- Section title -->
+                        <div class="flex flex-wrap gap-3">
+                            <!-- Action buttons container -->
+                            <button onclick="showSection('licenses'); setTimeout(generateLicenses, 100)" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2">
+                                <!-- Generate license keys button -->
+                                <i class="fas fa-plus"></i> Generate License Keys
+                            </button>
+                            <button onclick="showSection('users')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2">
+                                <!-- Manage users button -->
+                                <i class="fas fa-users"></i> Manage Users
+                            </button>
+                            <button onclick="showSection('messages')" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition flex items-center gap-2">
+                                <!-- View messages button -->
+                                <i class="fas fa-comments"></i> View Messages
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================================================
+                         WELCOME AND HELP SECTION
+                         ================================================================================ -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+                        <!-- Welcome section with gradient background -->
+                        <div class="flex items-start gap-4">
+                            <!-- Content container with icon and text -->
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <!-- Info icon container -->
+                                <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+                                <!-- Information icon -->
+                            </div>
+                            <div class="flex-1">
+                                <!-- Main content area -->
+                                <h3 class="font-bold text-lg mb-2 text-blue-900 dark:text-blue-100">Welcome to Admin Panel!</h3>
+                                <!-- Welcome heading -->
+                                <p class="text-blue-800 dark:text-blue-200 mb-3">
+                                    Manage users, license keys, and monitor calculations. Use the sidebar to navigate between sections.
+                                </p>
+                                <!-- Welcome message -->
+                                <div class="flex flex-wrap gap-2">
+                                    <!-- Feature badges -->
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">
+                                        <i class="fas fa-users"></i> User Management
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">
+                                        <i class="fas fa-key"></i> License Control
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full">
+                                        <i class="fas fa-comments"></i> Message Support
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            <!-- Messages Section -->
+            <section id="messagesSection" class="p-8 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-180px)]">
+                    <!-- Conversations List -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-lg">Conversations</h3>
+                                <button onclick="openNewMessageModal()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition flex items-center gap-1">
+                                    <i class="fas fa-plus"></i> New
+                                </button>
+                            </div>
+                            <input type="text" id="conversationSearch" placeholder="Search users..." onkeyup="filterConversations()" 
+                                   class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                        </div>
+                        <div id="conversationsList" class="flex-1 overflow-y-auto">
+                            <div class="text-center py-10 text-gray-500">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
+                                <p>Loading conversations...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Area -->
+                    <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+                        <!-- Chat Header -->
+                        <div id="chatHeader" class="p-4 border-b border-gray-200 dark:border-gray-700 hidden">
+                            <div class="flex items-center gap-3">
+                                <div id="chatUserAvatar" class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 font-bold">U</div>
+                                <div>
+                                    <p id="chatUserName" class="font-medium"></p>
+                                    <p id="chatUserEmail" class="text-sm text-gray-500"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div id="chatMessages" class="flex-1 overflow-y-auto p-4">
+                            <div class="text-center py-20 text-gray-500">
+                                <i class="fas fa-comments text-5xl mb-4 text-gray-300"></i>
+                                <p class="text-lg font-medium">Select a conversation</p>
+                                <p class="text-sm">Choose a user from the list to view messages</p>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input -->
+                        <div id="chatInput" class="p-4 border-t border-gray-200 dark:border-gray-700 hidden">
+                            <div class="flex gap-3">
+                                <div class="flex-1 relative">
+                                    <textarea id="adminMessageInput" rows="1" placeholder="Type your message..." 
+                                              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 resize-none pr-12"
+                                              onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendAdminMessage();}"></textarea>
+                                    <label class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-blue-500 transition">
+                                        <input type="file" id="adminFileInput" class="hidden" onchange="updateAdminFileName()">
+                                        <i class="fas fa-paperclip"></i>
+                                    </label>
+                                </div>
+                                <button onclick="sendAdminMessage()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2">
+                                    <i class="fas fa-paper-plane"></i> Send
+                                </button>
+                            </div>
+                            <p id="adminFileNameDisplay" class="text-xs text-gray-500 mt-2 hidden"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Users Section -->
+            <section id="usersSection" class="p-8 hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <h3 class="font-bold text-lg">All Users</h3>
+                        <input type="text" id="userSearch" placeholder="Search users..." onkeyup="searchUsers()" 
+                               class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm w-64">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Email Verified</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Joined</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="usersPagination" class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <!-- Pagination -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Licenses Section -->
+            <section id="licensesSection" class="p-8 hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <h3 class="font-bold text-lg">License Keys</h3>
+                        <div class="flex gap-3">
+                            <select id="licenseFilter" onchange="loadLicenses()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                                <option value="all">All Keys</option>
+                                <option value="available">Available</option>
+                                <option value="used">Used</option>
+                            </select>
+                            <button onclick="generateLicenses()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2">
+                                <i class="fas fa-plus"></i> Generate Keys
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">License Key</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Used By / Gifted To</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Created</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Expires</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="licensesTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Licenses will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Calculations Section -->
+            <section id="calculationsSection" class="p-8 hidden">
+                <!-- Users List View -->
+                <div id="usersCalculationsView" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <h3 class="font-bold text-lg">Users with Calculations</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Tools Used</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Total Calculations</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersCalcTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- User Detail View (Hidden by default) -->
+                <div id="userDetailView" class="hidden">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                            <div class="flex items-center gap-4">
+                                <button onclick="backToUsersList()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <div>
+                                    <h3 class="font-bold text-lg" id="selectedUserName">User Calculations</h3>
+                                    <p class="text-sm text-gray-500" id="selectedUserEmail"></p>
+                                </div>
+                            </div>
+                            <select id="userToolFilter" onchange="loadUserTools()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                                <option value="">All Tools</option>
+                                <option value="hydraulic">Hydraulic Motor</option>
+                                <option value="tractive_effort">Tractive Effort</option>
+                                <option value="load_distribution">Load Distribution</option>
+                                <option value="qmax">Qmax Safety</option>
+                                <option value="braking">Braking</option>
+                                <option value="vehicle_performance">Vehicle Performance</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Tools Cards -->
+                    <div id="userToolsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Tool cards will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profileSection" class="p-8 hidden">
+                <div class="max-w-2xl mx-auto">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8">
+                        <h3 class="text-2xl font-bold text-center mb-8">Admin Profile</h3>
+                        
+                        <!-- Profile Photo -->
+                        <div class="text-center mb-8">
+                            <div class="relative w-32 h-32 mx-auto mb-4">
+                                <img id="profilePhotoLarge" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Ccircle cx='12' cy='12' r='12' fill='%233b82f6'/%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' fill='%23ffffff'/%3E%3C/svg%3E" 
+                                     class="w-full h-full rounded-full object-cover border-4 border-blue-500 shadow-lg">
+                                <input type="file" id="adminPhotoUpload" accept="image/*" class="hidden" onchange="uploadAdminPhoto()">
+                                <button onclick="document.getElementById('adminPhotoUpload').click()" 
+                                        class="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition shadow-lg">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Click the camera icon to update photo</p>
+                        </div>
+
+                        <!-- Admin Info Form -->
+                        <div class="space-y-6">
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">Admin Name</label>
+        <input type="text" id="adminName" value="Admin"
+            class="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition">
+    </div>
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">Admin Email</label>
+        <input type="email" id="adminEmailDisplay"
+            class="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition">
+        <div class="flex justify-end mt-1">
+            <button onclick="changeAdminEmail()" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 underline font-medium">Change Email</button>
+        </div>
+    </div>
+
+    <div class="mt-2">
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Password</label>
+        <input type="password" value="••••••••••••" readonly
+            class="w-full p-3 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 cursor-not-allowed">
+    </div>
+
+    <div class="flex justify-end mt-4">
+        <button onclick="openAdminPasswordModal()" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 underline font-medium">Change Password</button>
+    </div>
+    </div>
+
+                        <!-- Save Button -->
+                        <div class="mt-8">
+                            <button onclick="saveAdminProfile()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition shadow-lg">
+                                <i class="fas fa-save mr-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            </main>
+        </div>
+
+        <!-- Footer (Full Width) -->
+            <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto py-8">
+                <div class="px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+                    <nav class="flex flex-wrap gap-4 mt-2">
+                        <a href="/privacy-policy.html" class="text-xs text-blue-600 hover:underline">Privacy Policy</a>
+                        <a href="/terms.html" class="text-xs text-blue-600 hover:underline">Terms</a>
+                        <a href="/faq.html" class="text-xs text-blue-600 hover:underline">FAQ</a>
+                        <a href="/documentation.html" class="text-xs text-blue-600 hover:underline">Documentation</a>
+                        <a href="/disclaimer.html" class="text-xs text-blue-600 hover:underline">Disclaimer</a>
+                    </nav>
+                </div>
+            </footer>
+    </div>
+
+    <!-- Admin Password Change Modal -->
+    <div id="adminPasswordModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Change Admin Password</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Current Password</label>
+                    <input type="password" id="adminCurrentPassword" placeholder="Enter current password"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">New Password</label>
+                    <input type="password" id="adminNewPassword" placeholder="Enter new password"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Confirm New Password</label>
+                    <input type="password" id="adminConfirmPassword" placeholder="Confirm new password"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                </div>
+            </div>
+            <div class="mt-6 flex gap-3">
+                <button onclick="closeAdminPasswordModal()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 py-3 rounded-lg font-semibold transition">Cancel</button>
+                <button onclick="submitAdminPasswordChange()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Calculation Modal -->
+    <div id="renameCalcModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold">Rename Calculation</h3>
+                <button onclick="closeRenameCalcModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Current Name</label>
+                <p id="renameCurrentName" class="px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300"></p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">New Name</label>
+                <input type="text" id="renameNewName" placeholder="Enter new name (e.g., EN-20 Project)"
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+            </div>
+            <input type="hidden" id="renameCalcId">
+            <div class="flex gap-3">
+                <button onclick="submitRenameCalc()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                    <i class="fas fa-save"></i> Save Name
+                </button>
+                <button onclick="closeRenameCalcModal()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 py-3 rounded-lg font-semibold transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Generate Keys Modal -->
+    <div id="generateModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Generate License Keys</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Number of Keys</label>
+                <input type="number" id="keyCount" value="5" min="1" max="50" 
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Expiration</label>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <input type="radio" name="expiration" value="no_expiry" checked class="w-4 h-4" onchange="updateExpirationUI()">
+                        <span class="text-sm">No Expiration</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <input type="radio" name="expiration" value="1hour" class="w-4 h-4" onchange="updateExpirationUI()">
+                        <span class="text-sm">Expire in 1 Hour</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <input type="radio" name="expiration" value="1day" class="w-4 h-4" onchange="updateExpirationUI()">
+                        <span class="text-sm">Expire in 1 Day</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <input type="radio" name="expiration" value="custom" class="w-4 h-4" onchange="updateExpirationUI()">
+                        <span class="text-sm">Custom Date & Time</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="customExpirationUI" class="hidden mb-4">
+                <label class="block text-sm font-medium mb-2">Expiration Date & Time</label>
+                <input type="datetime-local" id="customExpireDateTime" 
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+            </div>
+
+            <div id="generatedKeys" class="hidden mb-4">
+                <label class="block text-sm font-medium mb-2">Generated Keys (click to copy)</label>
+                <div id="keysList" class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 max-h-60 overflow-y-auto space-y-2">
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="confirmGenerateKeys()" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition">
+                    Generate
+                </button>
+                <button onclick="closeGenerateModal()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 py-3 rounded-lg font-semibold transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Message Modal -->
+    <div id="newMessageModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-lg">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold">New Message</h3>
+                <button onclick="closeNewMessageModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Select User</label>
+                <div class="relative">
+                    <input type="text" id="userSearchInput" placeholder="Search by name or email..." 
+                           onkeyup="searchUsersForMessage()" onfocus="showUserDropdown()"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                    <div id="userDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
+                    </div>
+                </div>
+                <input type="hidden" id="selectedUserId">
+                <p id="selectedUserDisplay" class="text-sm text-blue-600 mt-2 hidden"></p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Subject (Optional)</label>
+                <input type="text" id="newMsgSubject" placeholder="Enter subject..." 
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Message</label>
+                <textarea id="newMsgContent" rows="4" placeholder="Type your message..." 
+                          class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 resize-none"></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Attach File (Optional)</label>
+                <div class="relative">
+                    <input type="file" id="newMsgFile" class="hidden" onchange="updateNewMsgFileName()">
+                    <button onclick="document.getElementById('newMsgFile').click()" 
+                            class="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-paperclip"></i>
+                        <span id="newMsgFileDisplay">Choose file to attach</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="sendNewMessage()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+                <button onclick="closeNewMessageModal()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 py-3 rounded-lg font-semibold transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share License Modal -->
+    <div id="shareLicenseModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-lg">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold">Share License Gift</h3>
+                <button onclick="closeShareLicenseModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">License Key</label>
+                <input type="text" id="shareLicenseKey" readonly 
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 font-mono text-sm">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Select User to Gift</label>
+                <div class="relative">
+                    <input type="text" id="licenseUserSearchInput" placeholder="Search by name or email..." 
+                           onkeyup="searchLicenseUsers()" onfocus="showLicenseUserDropdown()"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                    <div id="licenseUserDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
+                    </div>
+                </div>
+                <input type="hidden" id="selectedLicenseUserId">
+                <p id="selectedLicenseUserDisplay" class="text-sm text-blue-600 mt-2 hidden"></p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Gift Message</label>
+                <textarea id="licenseGiftMessage" rows="4" placeholder="Auto-filled gift message..."
+                          class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 resize-none"></textarea>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="sendLicenseGift()" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                    <i class="fas fa-gift"></i> Send Gift
+                </button>
+                <button onclick="closeShareLicenseModal()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 py-3 rounded-lg font-semibold transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] flex flex-col gap-2"></div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '';
+        let currentUsersPage = 1;
+        let currentLicensesPage = 1;
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+            
+            toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-pulse min-w-[300px] max-w-[500px]`;
+            toast.innerHTML = `
+                <span class="text-xl font-bold">${icons[type]}</span>
+                <span class="font-medium">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                toast.style.transition = 'all 0.3s ease';
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            }, 10);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Check admin session
+        document.addEventListener('DOMContentLoaded', () => {
+            const isAdmin = sessionStorage.getItem('isAdmin');
+            if (isAdmin === 'true') {
+                showDashboard();
+            }
+            
+            // Dark mode
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        });
+        
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+            toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+        
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            try {
+                const res = await fetch(`${API_BASE}/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (res.ok) {
+                    sessionStorage.setItem('isAdmin', 'true');
+                    showDashboard();
+                } else {
+                    showToast('Invalid admin credentials', 'error');
+                }
+            } catch (err) {
+                showToast('Login failed: ' + err.message, 'error');
+            }
+        });
+        
+        function adminLogout() {
+            // Clear admin session and local storage entries
+            try {
+                // Admin-specific state
+                sessionStorage.removeItem('isAdmin');
+                sessionStorage.removeItem('adminEmail');
+                localStorage.removeItem('adminName');
+                localStorage.removeItem('adminPhoto');
+
+                // Also clear any user auth state so public navbar appears immediately
+                localStorage.removeItem('token');
+                localStorage.removeItem('user_id');
+                localStorage.removeItem('user_email');
+                localStorage.removeItem('user_name');
+                sessionStorage.removeItem('isManager');
+
+                // Clear any polling intervals started by the admin page
+                adminIntervals.forEach(h => { try { clearInterval(h); } catch(e){} });
+                adminIntervals = [];
+
+                // Reset in-memory UI state
+                selectedUserId = null;
+                conversationsData = [];
+
+                // Force navigation to public index (replace history to prevent back navigation to admin)
+                location.replace('/');
+            } catch (err) {
+                console.error('Error during admin logout cleanup:', err);
+                // Fallback: reload page and try to clear storage
+                sessionStorage.removeItem('isAdmin');
+                localStorage.removeItem('adminName');
+                localStorage.removeItem('adminPhoto');
+                localStorage.removeItem('token');
+                location.replace('/');
+            }
+        }
+        
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        }
+        
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+            // Show selected section
+            document.getElementById(section + 'Section').classList.remove('hidden');
+            
+            // Update sidebar
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.section === section) link.classList.add('active');
+            });
+
+            // Load messages if messages section
+            if (section === 'messages') {
+                loadConversations();
+            }
+            
+            // Load profile data if profile section
+            if (section === 'profile') {
+                loadAdminProfile();
+            }
+        }
+        
+        // Load Stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/stats`);
+                const data = await res.json();
+                
+                document.getElementById('statTotalUsers').textContent = (data.total_users ?? 0);
+                document.getElementById('statActiveLicenses').textContent = (data.active_licenses ?? 0);
+                document.getElementById('statAvailableKeys').textContent = (data.available_keys ?? 0);
+                document.getElementById('statTotalCalculations').textContent = (data.total_calculations ?? 0);
+                document.getElementById('statRecentSignups').textContent = (data.recent_signups ?? 0);
+                document.getElementById('statUnreadMessages').textContent = (data.unread_messages ?? 0);
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+        
+        // Load Users
+        async function loadUsers(page = 1, search = '') {
+            currentUsersPage = page;
+            try {
+                const res = await fetch(`${API_BASE}/admin/users?page=${page}&limit=10&search=${search}`);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = data.users.map(u => `
+                    <tr class="table-row">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                                    ${(u.name || u.email)[0].toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="font-medium">${u.name} ${u.is_manager ? '<span class="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs font-bold">MANAGER</span>' : ''}</p>
+                                    <p class="text-sm text-gray-500">${u.email}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${u.email_verified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
+                                ${u.email_verified ? 'Verified' : 'Not Verified'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${u.created_at}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex gap-2">
+                                <button onclick="toggleManager(${u.id}, ${!u.is_manager})" class="p-2 rounded-lg ${u.is_manager ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 hover:bg-red-100 hover:text-red-600' : 'hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600'} transition" title="${u.is_manager ? 'Remove Manager' : 'Make Manager'}">
+                                    <i class="fas ${u.is_manager ? 'fa-user-minus' : 'fa-user-shield'}"></i>
+                                </button>
+                                <button onclick="deleteUser(${u.id})" class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 transition" title="Delete User">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Pagination
+                document.getElementById('usersPagination').innerHTML = `
+                    <span class="text-sm text-gray-500">Total: ${(data.total ?? 0)} users</span>
+                    <div class="flex gap-2">
+                        <button onclick="loadUsers(${page - 1})" ${page <= 1 ? 'disabled' : ''} class="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 disabled:opacity-50">Prev</button>
+                        <span class="px-3 py-1">Page ${page}</span>
+                        <button onclick="loadUsers(${page + 1})" ${(data.users && data.users.length < 10) ? 'disabled' : ''} class="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 disabled:opacity-50">Next</button>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Failed to load users:', err);
+            }
+        }
+        
+        function searchUsers() {
+            const search = document.getElementById('userSearch').value;
+            loadUsers(1, search);
+        }
+        
+        async function toggleManager(userId, makeManager) {
+            try {
+                await fetch(`${API_BASE}/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_manager: makeManager })
+                });
+                loadUsers(currentUsersPage);
+                showToast(makeManager ? 'User is now a Manager!' : 'Manager status removed.', 'success');
+            } catch (err) {
+                showToast('Failed to update user', 'error');
+            }
+        }
+        
+        async function toggleLicense(userId, activate) {
+
+            try {
+                await fetch(`${API_BASE}/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_license_active: activate })
+                });
+                loadUsers(currentUsersPage);
+                loadStats();
+            } catch (err) {
+                showToast('Failed to update user', 'error');
+            }
+        }
+        
+        async function deleteUser(userId) {
+            try {
+                await fetch(`${API_BASE}/admin/users/${userId}`, { method: 'DELETE' });
+                loadUsers(currentUsersPage);
+                loadStats();
+                showToast('User deleted successfully', 'success');
+            } catch (err) {
+                showToast('Failed to delete user', 'error');
+            }
+        }
+        
+        // Load Licenses
+        async function loadLicenses(page = 1) {
+            currentLicensesPage = page;
+            const filter = document.getElementById('licenseFilter').value;
+            try {
+                const res = await fetch(`${API_BASE}/admin/licenses?page=${page}&limit=15&filter_type=${filter}`);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('licensesTableBody');
+                tbody.innerHTML = data.licenses.map(l => {
+                    const expiresDate = l.expires_at ? new Date(l.expires_at).toLocaleString('en-IN') : 'Never';
+                    const isExpired = l.expires_at && new Date(l.expires_at) < new Date();
+                    
+                    // User info display
+                    let userInfo = '-';
+                    if (l.used_by_email) {
+                        userInfo = `<span class="text-green-600 font-medium" title="Used by">${l.used_by_email}</span>`;
+                    } else if (l.gifted_to_email) {
+                        userInfo = `<span class="text-blue-600" title="Gifted to">🎁 ${l.gifted_to_email}</span>`;
+                    }
+                    
+                    return `
+                    <tr class="table-row">
+                        <td class="px-6 py-4">
+                            <code class="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded font-mono text-sm cursor-pointer hover:bg-blue-100" onclick="copyKey('${l.key}')">${l.key}</code>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${l.is_used ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+                                ${l.is_used ? 'Used' : 'Available'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm">${userInfo}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${l.created_at}</td>
+                        <td class="px-6 py-4 text-sm ${isExpired ? 'text-red-600 font-medium' : 'text-gray-500'}">${expiresDate}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex gap-2">
+                                ${!l.is_used ? `<button onclick="openShareLicense(${l.id}, '${l.key}')" class="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 transition" title="Share License">
+                                    <i class="fas fa-share"></i>
+                                </button>` : ''}
+                                <button onclick="deleteLicense(${l.id})" class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 transition" title="Delete Key">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `}).join('');
+            } catch (err) {
+                console.error('Failed to load licenses:', err);
+            }
+        }
+        
+        function copyKey(key) {
+            navigator.clipboard.writeText(key);
+            showToast('Key copied to clipboard!', 'success');
+        }
+        
+        async function deleteLicense(licenseId) {
+            try {
+                await fetch(`${API_BASE}/admin/licenses/${licenseId}`, { method: 'DELETE' });
+                loadLicenses(currentLicensesPage);
+                loadStats();
+                showToast('License deleted', 'success');
+            } catch (err) {
+                showToast('Failed to delete license', 'error');
+            }
+        }
+        
+        function generateLicenses() {
+            document.getElementById('generateModal').classList.remove('hidden');
+            document.getElementById('generatedKeys').classList.add('hidden');
+        }
+        
+        function closeGenerateModal() {
+            document.getElementById('generateModal').classList.add('hidden');
+        }
+        
+        async function confirmGenerateKeys() {
+            const count = parseInt(document.getElementById('keyCount').value) || 5;
+            const expiration = document.querySelector('input[name="expiration"]:checked').value;
+            
+            let expiresAt = null;
+            if (expiration === '1hour') {
+                expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+            } else if (expiration === '1day') {
+                expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+            } else if (expiration === 'custom') {
+                const customDate = document.getElementById('customExpireDateTime').value;
+                if (!customDate) {
+                    showToast('Please select custom expiration date and time', 'warning');
+                    return;
+                }
+                expiresAt = new Date(customDate).toISOString();
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/admin/licenses/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ count, expires_at: expiresAt })
+                });
+                const data = await res.json();
+                
+                document.getElementById('generatedKeys').classList.remove('hidden');
+                document.getElementById('keysList').innerHTML = data.keys.map(key => 
+                    `<div class="bg-white dark:bg-gray-800 px-3 py-2 rounded cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 font-mono text-sm" onclick="copyKey('${key}')">${key}</div>`
+                ).join('');
+                
+                loadLicenses();
+                loadStats();
+            } catch (err) {
+                showToast('Failed to generate keys: ' + (err.message || 'Unknown error'), 'error');
+            }
+        }
+
+        function updateExpirationUI() {
+            const selected = document.querySelector('input[name="expiration"]:checked').value;
+            const customUI = document.getElementById('customExpirationUI');
+            if (selected === 'custom') {
+                customUI.classList.remove('hidden');
+                // Set minimum date to now
+                const now = new Date().toISOString().slice(0, 16);
+                document.getElementById('customExpireDateTime').min = now;
+            } else {
+                customUI.classList.add('hidden');
+            }
+        }
+        
+        // Load Calculations - Now loads unique users first
+        let selectedCalcUserId = null;
+        let selectedCalcUserData = null;
+        
+        async function loadCalculations() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/calculations/users`);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('usersCalcTableBody');
+                tbody.innerHTML = data.users.map(u => `
+                    <tr class="table-row cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20" onclick="viewUserCalculations(${u.user_id}, '${u.email}', '${u.name}')">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                                    ${(u.name || u.email)[0].toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="font-medium">${u.name}</p>
+                                    <p class="text-sm text-gray-500">${u.email}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                ${u.tools.map(t => `<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">${t}</span>`).join('')}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-bold">${u.total_calculations}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <button onclick="event.stopPropagation(); viewUserCalculations(${u.user_id}, '${u.email}', '${u.name}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition">
+                                <i class="fas fa-eye mr-1"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                `).join('') || '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">No users with calculations found</td></tr>';
+            } catch (err) {
+                console.error('Failed to load calculations:', err);
+            }
+        }
+        
+        async function viewUserCalculations(userId, email, name) {
+            selectedCalcUserId = userId;
+            document.getElementById('selectedUserName').textContent = name || 'User';
+            document.getElementById('selectedUserEmail').textContent = email;
+            document.getElementById('usersCalculationsView').classList.add('hidden');
+            document.getElementById('userDetailView').classList.remove('hidden');
+            document.getElementById('userToolFilter').value = '';
+            await loadUserTools();
+        }
+        
+        function backToUsersList() {
+            selectedCalcUserId = null;
+            document.getElementById('userDetailView').classList.add('hidden');
+            document.getElementById('usersCalculationsView').classList.remove('hidden');
+        }
+        
+        async function loadUserTools() {
+            if (!selectedCalcUserId) return;
+            
+            const toolFilter = document.getElementById('userToolFilter').value;
+            try {
+                const res = await fetch(`${API_BASE}/admin/calculations/user/${selectedCalcUserId}${toolFilter ? '?tool_name=' + toolFilter : ''}`);
+                const data = await res.json();
+                selectedCalcUserData = data;
+                
+                const container = document.getElementById('userToolsContainer');
+                
+                if (Object.keys(data.tools).length === 0) {
+                    container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="fas fa-calculator text-4xl mb-3"></i><p>No calculations found</p></div>';
+                    return;
+                }
+                
+                const toolNames = {
+                    'hydraulic': 'Hydraulic Motor',
+                    'tractive_effort': 'Tractive Effort',
+                    'load_distribution': 'Load Distribution',
+                    'qmax': 'Qmax Safety',
+                    'braking': 'Braking',
+                    'vehicle_performance': 'Vehicle Performance'
+                };
+                
+                const toolUrls = {
+                    'hydraulic': '/calculator.html',
+                    'tractive_effort': '/tractive_effort_calculator.html',
+                    'load_distribution': '/load_distribution_calculator.html',
+                    'qmax': '/qmax_calculator.html',
+                    'braking': '/braking_calculator.html',
+                    'vehicle_performance': '/vehicle_performance_calculator.html'
+                };
+                
+                const toolColors = {
+                    'hydraulic': 'blue',
+                    'tractive_effort': 'green',
+                    'load_distribution': 'orange',
+                    'qmax': 'purple',
+                    'braking': 'yellow',
+                    'vehicle_performance': 'red'
+                };
+                
+                container.innerHTML = Object.entries(data.tools).map(([toolName, calculations]) => `
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div class="p-4 bg-${toolColors[toolName] || 'blue'}-50 dark:bg-${toolColors[toolName] || 'blue'}-900/20 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-bold text-${toolColors[toolName] || 'blue'}-700 dark:text-${toolColors[toolName] || 'blue'}-300">${toolNames[toolName] || toolName}</h4>
+                                <span class="px-2 py-1 bg-white dark:bg-gray-700 rounded-full text-xs font-bold">${calculations.length} calcs</span>
+                            </div>
+                        </div>
+                        <div class="max-h-64 overflow-y-auto">
+                            ${calculations.map(c => `
+                                <div class="p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1 cursor-pointer" onclick="recalculate('${toolName}', ${c.id}, '${toolUrls[toolName]}')">
+                                            <p class="font-medium text-sm">${c.calculation_name}</p>
+                                            <p class="text-xs text-gray-500">${c.created_at}</p>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <button onclick="event.stopPropagation(); openRenameCalcModal(${c.id}, '${c.calculation_name.replace(/'/g, "\\'")}')" class="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition" title="Rename">
+                                                <i class="fas fa-edit text-xs"></i>
+                                            </button>
+                                            <button onclick="event.stopPropagation(); recalculate('${toolName}', ${c.id}, '${toolUrls[toolName]}')" class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 transition" title="Re-calculate">
+                                                <i class="fas fa-redo text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load user tools:', err);
+            }
+        }
+        
+        function recalculate(toolName, calcId, toolUrl) {
+            // Store data to load in the tool
+            const calc = selectedCalcUserData.tools[toolName].find(c => c.id === calcId);
+            if (calc) {
+                sessionStorage.setItem('adminRecalcData', JSON.stringify({
+                    inputs: JSON.parse(calc.inputs_json),
+                    results: JSON.parse(calc.results_json),
+                    name: calc.calculation_name
+                }));
+                window.location.href = toolUrl;
+            }
+        }
+
+        // ===== RENAME CALCULATION FUNCTIONS =====
+        function openRenameCalcModal(calcId, currentName) {
+            document.getElementById('renameCalcId').value = calcId;
+            document.getElementById('renameCurrentName').textContent = currentName;
+            document.getElementById('renameNewName').value = currentName;
+            document.getElementById('renameCalcModal').classList.remove('hidden');
+            document.getElementById('renameCalcModal').classList.add('flex');
+            document.getElementById('renameNewName').focus();
+            document.getElementById('renameNewName').select();
+        }
+
+        function closeRenameCalcModal() {
+            document.getElementById('renameCalcModal').classList.add('hidden');
+            document.getElementById('renameCalcModal').classList.remove('flex');
+            document.getElementById('renameCalcId').value = '';
+            document.getElementById('renameCurrentName').textContent = '';
+            document.getElementById('renameNewName').value = '';
+        }
+
+        async function submitRenameCalc() {
+            const calcId = document.getElementById('renameCalcId').value;
+            const newName = document.getElementById('renameNewName').value.trim();
+
+            if (!newName) {
+                showToast('Please enter a name', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/history/rename/${calcId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ calculation_name: newName })
+                });
+
+                if (res.ok) {
+                    showToast('Calculation renamed successfully!', 'success');
+                    closeRenameCalcModal();
+                    // Refresh the calculations view
+                    loadUserTools();
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || 'Failed to rename calculation', 'error');
+                }
+            } catch (err) {
+                console.error('Rename error:', err);
+                showToast('Failed to rename calculation', 'error');
+            }
+        }
+
+        // ===== MESSAGING FUNCTIONS =====
+        let selectedUserId = null;
+        // Interval handles to allow cleanup on logout
+        let adminIntervals = [];
+
+        let conversationsData = [];
+
+        async function loadAdminUnreadCount() {
+            try {
+                const res = await fetch(`${API_BASE}/messages/admin/unread-count`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const badge = document.getElementById('adminUnreadBadge');
+                    const statBadge = document.getElementById('statUnreadMessages');
+                    
+                    if (data.unread_count > 0) {
+                        badge.textContent = data.unread_count > 9 ? '9+' : data.unread_count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                    
+                    if (statBadge) {
+                        statBadge.textContent = data.unread_count;
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load unread count:', err);
+            }
+        }
+
+        async function loadConversations() {
+            try {
+                const res = await fetch(`${API_BASE}/messages/admin/conversations`);
+                if (res.ok) {
+                    const data = await res.json();
+                    // backend might return { conversations: [...] } or an array directly
+                    const conversations = Array.isArray(data) ? data : (data.conversations || []);
+                    conversationsData = conversations;
+                    renderConversations(conversations);
+                } else {
+                    // Non-OK response - show friendly message
+                    document.getElementById('conversationsList').innerHTML = `
+                        <div class="text-center py-10 text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                            <p>No conversations yet</p>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('Failed to load conversations:', err);
+                document.getElementById('conversationsList').innerHTML = `
+                    <div class="text-center py-10 text-red-500">
+                        <i class="fas fa-exclamation-circle text-2xl mb-3"></i>
+                        <p>Failed to load conversations</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Small helper to avoid HTML injection when inserting user-provided text
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function renderConversations(conversations) {
+            const list = document.getElementById('conversationsList');
+            
+            if (conversations.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-10 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                        <p>No conversations yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = conversations.map(conv => {
+                const userId = conv.user_id ?? (conv.user && conv.user.id) ?? (conv.user && conv.user.user_id) ?? '';
+                const userName = conv.user_name ?? (conv.user && conv.user.name) ?? (conv.user && conv.user.user_name) ?? '';
+                const userEmail = conv.user_email ?? (conv.user && conv.user.email) ?? (conv.user && conv.user.user_email) ?? '';
+                const unread = conv.unread_count ?? conv.unread_count ?? 0;
+                const lastMessage = conv.last_message ?? conv.last_message_excerpt ?? '';
+                const lastMessageTime = conv.last_message_time ?? conv.last_message_at ?? null;
+
+                return `
+                <div onclick="openChat(${userId}, '${escapeHtml(userName)}', '${escapeHtml(userEmail)}')" 
+                     class="p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition ${selectedUserId === userId ? 'bg-blue-50 dark:bg-blue-900/20' : ''}" 
+                     data-user-id="${userId}">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
+                            ${(userName || userEmail || 'U')[0].toUpperCase()}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <p class="font-medium truncate">${escapeHtml(userName)}</p>
+                                ${unread > 0 ? `<span class="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">${unread}</span>` : ''}
+                            </div>
+                            <p class="text-xs text-gray-500 truncate">${escapeHtml(userEmail)}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">${escapeHtml(lastMessage) || 'No messages'}</p>
+                            <p class="text-xs text-gray-400 mt-1">${formatTimeAgo(lastMessageTime)}</p>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function filterConversations() {
+            const search = document.getElementById('conversationSearch').value.toLowerCase();
+            const filtered = conversationsData.filter(conv => 
+                conv.user_name.toLowerCase().includes(search) || 
+                conv.user_email.toLowerCase().includes(search)
+            );
+            renderConversations(filtered);
+        }
+
+        async function openChat(userId, userName, userEmail) {
+            selectedUserId = userId;
+            
+            // Update UI to show selected
+            document.querySelectorAll('#conversationsList > div').forEach(div => {
+                div.classList.remove('bg-blue-50', 'dark:bg-blue-900/20');
+                if (div.dataset.userId == userId) {
+                    div.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
+                }
+            });
+
+            // Show chat header and input
+            document.getElementById('chatHeader').classList.remove('hidden');
+            document.getElementById('chatInput').classList.remove('hidden');
+            document.getElementById('chatUserAvatar').textContent = (userName || userEmail)[0].toUpperCase();
+            document.getElementById('chatUserName').textContent = userName;
+            document.getElementById('chatUserEmail').textContent = userEmail;
+
+            // Load messages
+            await loadChatMessages(userId);
+        }
+
+        async function loadChatMessages(userId) {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = `
+                <div class="text-center py-10">
+                    <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                </div>
+            `;
+
+            try {
+                const res = await fetch(`${API_BASE}/messages/admin/chat/${userId}`);
+                if (res.ok) {
+                    const messages = await res.json();
+                    
+                    if (messages.length === 0) {
+                        container.innerHTML = `
+                            <div class="text-center py-20 text-gray-500">
+                                <i class="fas fa-comment-slash text-4xl mb-3 text-gray-300"></i>
+                                <p>No messages yet</p>
+                                <p class="text-sm">Start the conversation by sending a message</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    container.innerHTML = messages.map(msg => `
+                        <div class="flex ${msg.is_from_admin ? 'justify-end' : 'justify-start'} mb-4">
+                            <div class="max-w-[70%] ${msg.is_from_admin ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700'} rounded-2xl px-4 py-3 ${msg.is_from_admin ? 'rounded-br-md' : 'rounded-bl-md'}">
+                                ${msg.subject ? `<p class="font-semibold text-sm mb-1 ${msg.is_from_admin ? 'text-blue-100' : 'text-gray-500'}">${msg.subject}</p>` : ''}
+                                <p class="${msg.is_from_admin ? 'text-white' : 'text-gray-800 dark:text-gray-200'} whitespace-pre-wrap">${msg.content}</p>
+                                ${msg.file_name ? `
+                                    <a href="${msg.file_path}" target="_blank" class="flex items-center gap-2 mt-2 text-sm ${msg.is_from_admin ? 'text-blue-200 hover:text-white' : 'text-blue-600 hover:text-blue-800'}">
+                                        <i class="fas fa-paperclip"></i> ${msg.file_name}
+                                    </a>
+                                ` : ''}
+                                <p class="text-xs ${msg.is_from_admin ? 'text-blue-200' : 'text-gray-400'} mt-1">${formatTimeAgo(msg.created_at)}</p>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    // Scroll to bottom
+                    container.scrollTop = container.scrollHeight;
+
+                    // Mark messages as read
+                    await fetch(`${API_BASE}/messages/mark-all-read/${userId}?is_admin=true`, { method: 'PUT' });
+                    loadAdminUnreadCount();
+                    loadConversations();
+                }
+            } catch (err) {
+                console.error('Failed to load chat:', err);
+                container.innerHTML = `
+                    <div class="text-center py-10 text-red-500">
+                        <i class="fas fa-exclamation-circle text-2xl mb-3"></i>
+                        <p>Failed to load messages</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateAdminFileName() {
+            const file = document.getElementById('adminFileInput').files[0];
+            const display = document.getElementById('adminFileNameDisplay');
+            if (file) {
+                display.textContent = `📎 ${file.name}`;
+                display.classList.remove('hidden');
+            } else {
+                display.classList.add('hidden');
+            }
+        }
+
+        async function sendAdminMessage() {
+            if (!selectedUserId) return;
+            
+            const content = document.getElementById('adminMessageInput').value.trim();
+            const file = document.getElementById('adminFileInput').files[0];
+            
+            if (!content && !file) {
+                showToast('Please enter a message or attach a file', 'warning');
+                return;
+            }
+
+            try {
+                let res;
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('receiver_id', selectedUserId);
+                    formData.append('content', content || `Sent a file: ${file.name}`);
+                    formData.append('is_from_admin', 'true');
+                    formData.append('file', file);
+
+                    res = await fetch(`${API_BASE}/messages/send-with-file`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    res = await fetch(`${API_BASE}/messages/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            receiver_id: selectedUserId,
+                            content: content,
+                            is_from_admin: true
+                        })
+                    });
+                }
+
+                if (res.ok) {
+                    document.getElementById('adminMessageInput').value = '';
+                    document.getElementById('adminFileInput').value = '';
+                    document.getElementById('adminFileNameDisplay').classList.add('hidden');
+                    await loadChatMessages(selectedUserId);
+                    loadConversations();
+                } else {
+                    showToast('Failed to send message', 'error');
+                }
+            } catch (err) {
+                console.error('Failed to send message:', err);
+                showToast('Failed to send message', 'error');
+            }
+        }
+
+        function formatTimeAgo(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            // Show actual time for better clarity
+            const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+            const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+            if (diff < 86400000) return `Today, ${timeStr}`;
+            if (diff < 172800000) return `Yesterday, ${timeStr}`;
+            
+            return `${dateStr}, ${timeStr}`;
+        }
+
+        // ===== NEW MESSAGE MODAL FUNCTIONS =====
+        let allUsersForMessage = [];
+
+        function openNewMessageModal() {
+            document.getElementById('newMessageModal').classList.remove('hidden');
+            document.getElementById('newMessageModal').classList.add('flex');
+            loadAllUsersForMessage();
+        }
+
+        function closeNewMessageModal() {
+            document.getElementById('newMessageModal').classList.add('hidden');
+            document.getElementById('newMessageModal').classList.remove('flex');
+            // Clear form
+            document.getElementById('userSearchInput').value = '';
+            document.getElementById('selectedUserId').value = '';
+            document.getElementById('selectedUserDisplay').classList.add('hidden');
+            document.getElementById('newMsgSubject').value = '';
+            document.getElementById('newMsgContent').value = '';
+            document.getElementById('newMsgFile').value = '';
+            document.getElementById('newMsgFileDisplay').textContent = 'Choose file to attach';
+            document.getElementById('userDropdown').classList.add('hidden');
+        }
+
+        async function loadAllUsersForMessage() {
+            try {
+                console.log('Loading users for message...');
+                const res = await fetch(`${API_BASE}/admin/users?limit=100`);
+                console.log('Users response status:', res.status);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('Users data received:', data);
+                    
+                    // Check different response formats
+                    if (data.users && Array.isArray(data.users)) {
+                        allUsersForMessage = data.users;
+                    } else if (Array.isArray(data)) {
+                        allUsersForMessage = data;
+                    } else {
+                        console.error('Unexpected data format:', data);
+                        allUsersForMessage = [];
+                    }
+                    
+                    console.log('Users loaded:', allUsersForMessage.length, allUsersForMessage);
+                    
+                    // Show dropdown immediately after loading
+                    if (allUsersForMessage.length > 0) {
+                        showUserDropdown();
+                    } else {
+                        const dropdown = document.getElementById('userDropdown');
+                        dropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 text-sm">No users found in system</div>';
+                        dropdown.classList.remove('hidden');
+                    }
+                } else {
+                    console.error('Failed to load users:', res.status);
+                    showToast('Failed to load users', 'error');
+                }
+            } catch (err) {
+                console.error('Failed to load users:', err);
+                showToast('Failed to load users', 'error');
+            }
+        }
+
+        function showUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            
+            if (!allUsersForMessage || allUsersForMessage.length === 0) {
+                dropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 text-sm">Loading users...</div>';
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            // Show all users initially
+            dropdown.innerHTML = allUsersForMessage.slice(0, 15).map(u => `
+                <div onclick="selectUserForMessage(${u.id}, '${(u.name || 'User').replace(/'/g, "\\'")}', '${u.email.replace(/'/g, "\\'")}')" 
+                     class="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <p class="font-medium text-gray-900 dark:text-white">${u.name || 'User'}</p>
+                    <p class="text-sm text-gray-500">${u.email}</p>
+                </div>
+            `).join('');
+            dropdown.classList.remove('hidden');
+        }
+
+        function searchUsersForMessage() {
+            const search = document.getElementById('userSearchInput').value.toLowerCase();
+            const dropdown = document.getElementById('userDropdown');
+            
+            if (!search) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            if (!allUsersForMessage || allUsersForMessage.length === 0) {
+                dropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 text-sm">No users loaded</div>';
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            let filtered = allUsersForMessage.filter(u => 
+                (u.name && u.name.toLowerCase().includes(search)) || 
+                u.email.toLowerCase().includes(search)
+            );
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = `<div class="px-4 py-3 text-gray-500 text-sm">No users matching "${search}"</div>`;
+            } else {
+                dropdown.innerHTML = filtered.slice(0, 15).map(u => `
+                    <div onclick="selectUserForMessage(${u.id}, '${(u.name || 'User').replace(/'/g, "\\'")}', '${u.email.replace(/'/g, "\\'")}')" 
+                         class="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0">
+                        <p class="font-medium text-gray-900 dark:text-white">${u.name || 'User'}</p>
+                        <p class="text-sm text-gray-500">${u.email}</p>
+                    </div>
+                `).join('');
+            }
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectUserForMessage(userId, userName, userEmail) {
+            document.getElementById('selectedUserId').value = userId;
+            document.getElementById('userSearchInput').value = '';
+            document.getElementById('selectedUserDisplay').innerHTML = `<i class="fas fa-user mr-1"></i> ${userName} (${userEmail})`;
+            document.getElementById('selectedUserDisplay').classList.remove('hidden');
+            document.getElementById('userDropdown').classList.add('hidden');
+        }
+
+        function updateNewMsgFileName() {
+            const file = document.getElementById('newMsgFile').files[0];
+            if (file) {
+                document.getElementById('newMsgFileDisplay').textContent = file.name;
+            } else {
+                document.getElementById('newMsgFileDisplay').textContent = 'Choose file to attach';
+            }
+        }
+
+        async function sendNewMessage() {
+            const userId = document.getElementById('selectedUserId').value;
+            const subject = document.getElementById('newMsgSubject').value.trim();
+            const content = document.getElementById('newMsgContent').value.trim();
+            const file = document.getElementById('newMsgFile').files[0];
+
+            if (!userId) {
+                showToast('Please select a user', 'warning');
+                return;
+            }
+            if (!content) {
+                showToast('Please enter a message', 'warning');
+                return;
+            }
+
+            try {
+                let res;
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('receiver_id', userId);
+                    formData.append('content', content);
+                    if (subject) formData.append('subject', subject);
+                    formData.append('is_from_admin', 'true');
+                    formData.append('file', file);
+
+                    res = await fetch(`${API_BASE}/messages/send-with-file`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    res = await fetch(`${API_BASE}/messages/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            receiver_id: parseInt(userId),
+                            content: content,
+                            subject: subject || null,
+                            is_from_admin: true
+                        })
+                    });
+                }
+
+                if (res.ok) {
+                    showToast('Message sent successfully!', 'success');
+                    closeNewMessageModal();
+                    loadConversations();
+                    // Open the chat with this user
+                    const user = allUsersForMessage.find(u => u.id == userId);
+                    if (user) {
+                        openChat(user.id, user.name || 'User', user.email);
+                    }
+                } else {
+                    showToast('Failed to send message', 'error');
+                }
+            } catch (err) {
+                console.error('Failed to send message:', err);
+                showToast('Failed to send message', 'error');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('userDropdown');
+            const input = document.getElementById('userSearchInput');
+            if (dropdown && input && !dropdown.contains(e.target) && e.target !== input) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Share License Functions
+        let allUsersForLicense = [];
+        let currentShareLicenseId = null;
+        let currentShareLicenseKey = null;
+
+        async function openShareLicense(licenseId, licenseKey) {
+            currentShareLicenseId = licenseId;
+            currentShareLicenseKey = licenseKey;
+            
+            document.getElementById('shareLicenseModal').classList.remove('hidden');
+            document.getElementById('shareLicenseModal').classList.add('flex');
+            document.getElementById('shareLicenseKey').value = licenseKey;
+            
+            // Auto-fill gift message
+            const giftMessage = `🎁 GIFT LICENSE KEY\n\nDear User,\n\nYou have been gifted a premium license key! 🎉\n\nLicense Key: ${licenseKey}\n\nInstructions:\n1. Copy the license key above\n2. Go to your profile settings\n3. Paste the key in the license field\n4. Enjoy unlimited access!\n\nThank you for being part of our community!\n\nBest regards,\nPremnathrail Team`;
+            
+            document.getElementById('licenseGiftMessage').value = giftMessage;
+            
+            // Load users
+            await loadAllUsersForLicense();
+        }
+
+        function closeShareLicenseModal() {
+            document.getElementById('shareLicenseModal').classList.add('hidden');
+            document.getElementById('shareLicenseModal').classList.remove('flex');
+            document.getElementById('licenseUserSearchInput').value = '';
+            document.getElementById('selectedLicenseUserId').value = '';
+            document.getElementById('selectedLicenseUserDisplay').classList.add('hidden');
+            document.getElementById('licenseUserDropdown').classList.add('hidden');
+        }
+
+        async function loadAllUsersForLicense() {
+            try {
+                console.log('Loading users for license share...');
+                const res = await fetch(`${API_BASE}/admin/users?limit=100`);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    if (data.users && Array.isArray(data.users)) {
+                        allUsersForLicense = data.users;
+                    } else if (Array.isArray(data)) {
+                        allUsersForLicense = data;
+                    } else {
+                        allUsersForLicense = [];
+                    }
+                    
+                    console.log('Users loaded for license:', allUsersForLicense.length);
+                    
+                    if (allUsersForLicense.length > 0) {
+                        showLicenseUserDropdown();
+                    }
+                } else {
+                    console.error('Failed to load users');
+                }
+            } catch (err) {
+                console.error('Failed to load users:', err);
+            }
+        }
+
+        function showLicenseUserDropdown() {
+            const dropdown = document.getElementById('licenseUserDropdown');
+            
+            if (!allUsersForLicense || allUsersForLicense.length === 0) {
+                dropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 text-sm">No users available</div>';
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            dropdown.innerHTML = allUsersForLicense.slice(0, 15).map(u => `
+                <div onclick="selectUserForLicenseShare(${u.id}, '${(u.name || 'User').replace(/'/g, "\\'")}', '${u.email.replace(/'/g, "\\'")}')" 
+                     class="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <p class="font-medium text-gray-900 dark:text-white">${u.name || 'User'}</p>
+                    <p class="text-sm text-gray-500">${u.email}</p>
+                </div>
+            `).join('');
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectUserForLicenseShare(userId, userName, userEmail) {
+            document.getElementById('selectedLicenseUserId').value = userId;
+            document.getElementById('selectedLicenseUserDisplay').textContent = `Selected: ${userName} (${userEmail})`;
+            document.getElementById('selectedLicenseUserDisplay').classList.remove('hidden');
+            document.getElementById('licenseUserDropdown').classList.add('hidden');
+            document.getElementById('licenseUserSearchInput').value = userName;
+        }
+
+        function searchLicenseUsers() {
+            const search = document.getElementById('licenseUserSearchInput').value.toLowerCase();
+            const dropdown = document.getElementById('licenseUserDropdown');
+            
+            if (!search) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            if (!allUsersForLicense || allUsersForLicense.length === 0) {
+                dropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 text-sm">No users loaded</div>';
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            let filtered = allUsersForLicense.filter(u => 
+                (u.name && u.name.toLowerCase().includes(search)) || 
+                u.email.toLowerCase().includes(search)
+            );
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = `<div class="px-4 py-3 text-gray-500 text-sm">No users matching "${search}"</div>`;
+            } else {
+                dropdown.innerHTML = filtered.map(u => `
+                    <div onclick="selectUserForLicenseShare(${u.id}, '${(u.name || 'User').replace(/'/g, "\\'")}', '${u.email.replace(/'/g, "\\'")}')" 
+                         class="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0">
+                        <p class="font-medium text-gray-900 dark:text-white">${u.name || 'User'}</p>
+                        <p class="text-sm text-gray-500">${u.email}</p>
+                    </div>
+                `).join('');
+            }
+            dropdown.classList.remove('hidden');
+        }
+
+        async function sendLicenseGift() {
+            const userId = document.getElementById('selectedLicenseUserId').value;
+            const message = document.getElementById('licenseGiftMessage').value.trim();
+            const licenseKey = document.getElementById('shareLicenseKey').value;
+            
+            if (!userId) {
+                showToast('Please select a user', 'warning');
+                return;
+            }
+            if (!message) {
+                showToast('Please enter a gift message', 'warning');
+                return;
+            }
+            if (!currentShareLicenseId) {
+                showToast('License ID not found', 'error');
+                return;
+            }
+
+            try {
+                // First, mark the license as gifted to this user
+                const giftRes = await fetch(`${API_BASE}/admin/licenses/${currentShareLicenseId}/gift`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: parseInt(userId)
+                    })
+                });
+                
+                if (!giftRes.ok) {
+                    console.error('Failed to mark license as gifted');
+                }
+
+                // Send message with license gift
+                const res = await fetch(`${API_BASE}/messages/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        receiver_id: parseInt(userId),
+                        content: message,
+                        subject: '🎁 License Gift',
+                        is_from_admin: true
+                    })
+                });
+
+                if (res.ok) {
+                    showToast('License gift sent successfully! User will receive a message with the key.', 'success');
+                    closeShareLicenseModal();
+                    loadLicenses();
+                } else {
+                    showToast('Failed to send license gift', 'error');
+                }
+            } catch (err) {
+                console.error('Failed to send license gift:', err);
+                showToast('Failed to send license gift', 'error');
+            }
+        }
+
+        // ============ ADMIN PROFILE FUNCTIONS ============
+        
+        async function loadAdminProfile() {
+            const adminEmail = sessionStorage.getItem('adminEmail') || 'admin@premnathrail.com';
+            const adminName = localStorage.getItem('adminName') || 'Admin';
+            
+            document.getElementById('adminEmailDisplay').value = adminEmail;
+            document.getElementById('adminName').value = adminName;
+
+            // Try to load server-persisted admin photo first
+            try {
+                const res = await fetch(`${API_BASE}/admin/photo`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.path) {
+                        const url = data.path + '?t=' + Date.now();
+                        document.getElementById('profilePhotoLarge').src = url;
+                        document.getElementById('adminProfilePhoto').src = url;
+                        localStorage.setItem('adminPhoto', url);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch admin photo from server:', err);
+            }
+
+            // Fallback to localStorage (previous client-side photo)
+            const adminPhoto = localStorage.getItem('adminPhoto');
+            if (adminPhoto) {
+                document.getElementById('profilePhotoLarge').src = adminPhoto;
+                document.getElementById('adminProfilePhoto').src = adminPhoto;
+            }
+        }
+
+        async function uploadAdminPhoto() {
+            const fileInput = document.getElementById('adminPhotoUpload');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            // Check file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('Image size should be less than 2MB', 'error');
+                return;
+            }
+
+            // Show immediate preview (base64)
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                document.getElementById('profilePhotoLarge').src = base64;
+                document.getElementById('adminProfilePhoto').src = base64;
+                // store preview locally so UI is immediate
+                localStorage.setItem('adminPhoto', base64);
+            };
+            reader.readAsDataURL(file);
+
+            // Upload to server to persist
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const res = await fetch(`${API_BASE}/admin/photo`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (res.ok && data.path) {
+                    const url = data.path + '?t=' + Date.now();
+                    document.getElementById('profilePhotoLarge').src = url;
+                    document.getElementById('adminProfilePhoto').src = url;
+                    localStorage.setItem('adminPhoto', url);
+                    showToast('Profile photo saved on server!', 'success');
+                } else {
+                    showToast(data.detail || 'Uploaded locally but server did not persist photo', 'warning');
+                }
+            } catch (err) {
+                console.error('Failed to upload admin photo to server:', err);
+                showToast('Failed to upload photo to server', 'error');
+            }
+        }
+
+        function saveAdminProfile() {
+            const adminName = document.getElementById('adminName').value.trim();
+            const adminEmail = document.getElementById('adminEmailDisplay').value.trim();
+            if (!adminName) {
+                showToast('Please enter admin name', 'warning');
+                return;
+            }
+            if (!adminEmail || !adminEmail.includes('@')) {
+                showToast('Please enter a valid email', 'warning');
+                return;
+            }
+            localStorage.setItem('adminName', adminName);
+            sessionStorage.setItem('adminEmail', adminEmail);
+            showToast('Profile saved successfully!', 'success');
+        }
+
+        async function changeAdminEmail() {
+            const newEmail = document.getElementById('adminEmailDisplay').value.trim();
+            if (!newEmail || !newEmail.includes('@')) {
+                showToast('Please enter a valid email', 'warning');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/admin/change-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ new_email: newEmail })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    sessionStorage.setItem('adminEmail', data.email);
+                    showToast('Email changed successfully!', 'success');
+                } else {
+                    showToast(data.detail || 'Failed to change email', 'error');
+                }
+            } catch (err) {
+                showToast('Failed to change email', 'error');
+            }
+        }
+
+        function openAdminPasswordModal() {
+            document.getElementById('adminPasswordModal').classList.remove('hidden');
+            document.getElementById('adminPasswordModal').classList.add('flex');
+            document.getElementById('adminCurrentPassword').value = '';
+            document.getElementById('adminNewPassword').value = '';
+            document.getElementById('adminConfirmPassword').value = '';
+        }
+
+        function closeAdminPasswordModal() {
+            document.getElementById('adminPasswordModal').classList.add('hidden');
+            document.getElementById('adminPasswordModal').classList.remove('flex');
+        }
+
+        async function submitAdminPasswordChange() {
+            const currentPass = document.getElementById('adminCurrentPassword').value;
+            const newPass = document.getElementById('adminNewPassword').value;
+            const confirmPass = document.getElementById('adminConfirmPassword').value;
+            
+            if (!currentPass || !newPass || !confirmPass) {
+                showToast('Please fill all password fields', 'warning');
+                return;
+            }
+            
+            if (newPass !== confirmPass) {
+                showToast('New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPass.length < 6) {
+                showToast('Password must be at least 6 characters', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/admin/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        current_password: currentPass,
+                        new_password: newPass
+                    })
+                });
+
+                if (res.ok) {
+                    showToast('Password changed successfully!', 'success');
+                    closeAdminPasswordModal();
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || 'Failed to change password', 'error');
+                }
+            } catch (err) {
+                console.error('Password change error:', err);
+                showToast('Failed to change password', 'error');
+            }
+        }
+
+        // Load admin photo on page load
+        function loadAdminPhotoOnStartup() {
+            const adminPhoto = localStorage.getItem('adminPhoto');
+            if (adminPhoto) {
+                document.getElementById('adminProfilePhoto').src = adminPhoto;
+            }
+        }
+
+        // ============ END ADMIN PROFILE FUNCTIONS ============
+
+        // Load unread count on dashboard load
+        function showDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            loadStats();
+            loadUsers();
+            loadLicenses();
+            loadCalculations();
+            loadAdminUnreadCount();
+            loadAdminPhotoOnStartup();
+            
+            // Refresh unread count every 30 seconds and keep handle for cleanup
+            const unreadHandle = setInterval(loadAdminUnreadCount, 30000);
+            adminIntervals.push(unreadHandle);
+        }
+    </script>
+</body>
+</html>

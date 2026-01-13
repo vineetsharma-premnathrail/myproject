@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<!-- ========================================================================================
+     DISCLAIMER - Premnath Engineering Works
+     ================================================================================
+     Purpose: Legal disclaimer page for liability limitations and user responsibilities
+     Framework: Static HTML with Tailwind CSS
+     Features: Responsive design, dark mode support, professional typography
+     Dependencies: Tailwind CSS (CDN), Google Fonts (Oswald, Roboto)
+     Compliance: Legal requirements for liability disclaimers and user notices
+     Accessibility: Semantic HTML, proper heading hierarchy, readable fonts
+     ================================================================================ -->
+<html lang="en">
+<!-- HTML root element with language set to English for accessibility and SEO -->
+
+<head>
+    <!-- ========================================================================================
+         DOCUMENT HEAD - Metadata and External Resources
+         ================================================================================
+         Contains: Character encoding, viewport settings, page title, CSS frameworks,
+         custom fonts, and responsive design configuration
+         ================================================================================ -->
+    <meta charset="UTF-8">
+    <!-- Character encoding declaration - ensures proper display of special characters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Responsive viewport meta tag - enables mobile-friendly scaling and layout -->
+    <title>Disclaimer | Premnath Engineering Works</title>
+    <!-- Page title displayed in browser tab and bookmarks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS framework loaded from CDN - provides utility-first CSS classes -->
+
+    <!-- ========================================================================================
+         GOOGLE FONTS - Typography Loading
+         ================================================================================
+         Loads: Oswald font family (weights 300-700) for headings, Roboto (weights 300-700) for body text
+         Purpose: Professional typography for legal document readability
+         ================================================================================ -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- ========================================================================================
+         TAILWIND CONFIGURATION - Custom Theme Settings
+         ================================================================================
+         Configures: Dark mode support, custom font families, brand colors for consistency
+         Colors: Custom page background, surface colors, and brand blue
+         ================================================================================ -->
+    <script>
+        // Tailwind CSS configuration object for custom theme extensions
+        tailwind.config = {
+            darkMode: 'class', // Enables dark mode using CSS class toggling
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'], // Default sans-serif font for body text
+                        display: ['Oswald', 'sans-serif'], // Display font for headings and branding
+                    },
+                    colors: {
+                        page: '#f0f2f5', // Custom page background color
+                        surface: '#ffffff', // Surface color for cards and containers
+                        brand: '#1d4ed8', // Brand blue color for links and accents
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- ========================================================================================
+         CUSTOM CSS STYLES - Disclaimer Specific Styling
+         ================================================================================
+         Contains: Prose styling for legal content, proper spacing and typography
+         Features: Semantic heading hierarchy, list styling, paragraph spacing
+         ================================================================================ -->
+    <style>
+        /* ========================================================================================
+             PROSE TYPOGRAPHY STYLES
+             ================================================================================
+             Purpose: Professional styling for legal document content
+             Features: Proper heading hierarchy, list formatting, consistent spacing
+             ================================================================================ */
+        .prose h2 { margin-top: 2rem; margin-bottom: 1rem; }
+        /* Section heading spacing - top margin for separation, bottom for content */
+        .prose p { margin-bottom: 1rem; }
+        /* Paragraph spacing for readability */
+        .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+        /* Unordered list styling with disc bullets and left padding */
+        .prose li { margin-bottom: 0.5rem; }
+        /* List item spacing for better readability */
+    </style>
+</head>
+
+<body class="bg-page dark:bg-gray-900 min-h-screen flex flex-col">
+    <!-- ========================================================================================
+         MAIN BODY - Disclaimer Page Layout
+         ================================================================================
+         Layout: Flex column layout with navbar and main content area
+         Features: Dark mode support, minimum height for full viewport coverage
+         Purpose: Professional presentation of legal disclaimer information
+         ================================================================================ -->
+
+    <!-- ========================================================================================
+         NAVIGATION BAR - Site Header with Back Link
+         ================================================================================ -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16">
+        <!-- Navigation bar with white/dark background and bottom border -->
+        <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+            <!-- Centered container with max width and flexbox layout -->
+            <a href="/" class="flex items-center gap-3">
+                <!-- Logo link to homepage -->
+                <img src="/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <!-- Company logo image with responsive sizing and hover effects -->
+            </a>
+            <a href="/" class="text-gray-600 hover:text-brand dark:text-gray-400 dark:hover:text-blue-400 flex items-center gap-2">
+                <!-- Back to home link with arrow icon -->
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- SVG arrow icon pointing left -->
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+                <!-- Link text -->
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main content area that takes up remaining space -->
+    <main class="flex-1 py-12">
+        <!-- Main content container with vertical padding -->
+        <div class="max-w-4xl mx-auto px-6">
+            <!-- Centered content container with max width -->
+
+            <!-- Warning banner to grab attention -->
+            <div class="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-6 rounded-r-lg mb-8">
+                <!-- Amber colored warning box with left border and rounded corners -->
+                <div class="flex items-start gap-4">
+                    <!-- Flex container for icon and text -->
+                    <svg class="w-8 h-8 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <!-- Warning triangle icon -->
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <!-- Warning text content -->
+                        <h3 class="text-lg font-bold text-amber-800 dark:text-amber-200">Important Notice</h3>
+                        <!-- Warning heading -->
+                        <p class="text-amber-700 dark:text-amber-300">
+                            Please read this disclaimer carefully before using any engineering calculation tools provided by this platform.
+                        </p>
+                        <!-- Warning message -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main disclaimer content card -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 md:p-12">
+                <!-- White/dark card with shadow and padding -->
+                <h1 class="text-4xl font-display font-bold text-gray-900 dark:text-white mb-2">Engineering Calculations Disclaimer</h1>
+                <!-- Main heading -->
+                <p class="text-gray-500 dark:text-gray-400 mb-8">Last updated: January 2024</p>
+                <!-- Last updated date -->
+                
+                <div class="prose text-gray-700 dark:text-gray-300">
+                    <!-- Prose content container with typography styles -->
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Purpose of Tools</h2>
+                    <!-- Section heading -->
+                    <p>
+                        The engineering calculation tools provided on this platform are intended to serve as <strong>reference aids</strong> 
+                        and <strong>preliminary estimation tools</strong> for qualified engineers and technical professionals. These tools 
+                        are designed to assist in the calculation process but are <strong>NOT</strong> intended to replace professional 
+                        engineering judgment, analysis, or certification.
+                    </p>
+                    <!-- Explanation of tool purpose -->
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">No Warranty</h2>
+                    <p>
+                        The calculations, results, and any information provided by these tools are provided <strong>"AS IS"</strong> 
+                        without warranty of any kind, either express or implied, including but not limited to:
+                    </p>
+                    <ul>
+                        <li>Warranties of merchantability</li>
+                        <li>Fitness for a particular purpose</li>
+                        <li>Accuracy or completeness of results</li>
+                        <li>Non-infringement of intellectual property</li>
+                    </ul>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Professional Verification Required</h2>
+                    <p class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+                        <strong class="text-red-600 dark:text-red-400">CRITICAL:</strong> All calculation results MUST be verified 
+                        by a qualified professional engineer before being used in any actual engineering application, design, 
+                        construction, or safety-critical system. The user assumes full responsibility for verifying the accuracy 
+                        and applicability of all results.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Limitation of Liability</h2>
+                    <p>
+                        Under no circumstances shall Premnath Engineering Works, its officers, directors, employees, agents, 
+                        or affiliates be liable for any:
+                    </p>
+                    <ul>
+                        <li>Direct, indirect, incidental, special, or consequential damages</li>
+                        <li>Loss of profits, revenue, or data</li>
+                        <li>Personal injury or property damage</li>
+                        <li>Business interruption</li>
+                        <li>Any other damages arising from the use of these calculation tools</li>
+                    </ul>
+                    <p>
+                        This limitation applies regardless of whether such damages arise from contract, negligence, strict liability, 
+                        or any other legal theory, even if we have been advised of the possibility of such damages.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Standards and Compliance</h2>
+                    <p>
+                        While our calculation tools reference various engineering standards (such as DIN EN, IS, etc.), 
+                        the user is responsible for:
+                    </p>
+                    <ul>
+                        <li>Ensuring the applicable standards are current and valid for their jurisdiction</li>
+                        <li>Verifying that the calculation methodology is appropriate for their specific application</li>
+                        <li>Confirming compliance with all local, national, and international regulations</li>
+                        <li>Obtaining all necessary certifications and approvals from relevant authorities</li>
+                    </ul>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">User Responsibility</h2>
+                    <p>By using these calculation tools, you acknowledge and agree that:</p>
+                    <ul>
+                        <li>You are a qualified professional or are working under the supervision of a qualified professional</li>
+                        <li>You understand the limitations of computational tools in engineering analysis</li>
+                        <li>You will independently verify all results before use</li>
+                        <li>You assume all risks associated with the use of these tools</li>
+                        <li>You will not hold Premnath Engineering Works liable for any errors or omissions</li>
+                    </ul>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Indemnification</h2>
+                    <p>
+                        You agree to indemnify and hold harmless Premnath Engineering Works and its affiliates, officers, 
+                        agents, employees, and partners from any claim, demand, damages, or expenses, including reasonable 
+                        attorneys' fees, arising from your use of the calculation tools or violation of this Disclaimer.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Specific Tool Disclaimers</h2>
+                    <p><strong>Braking Performance Calculator:</strong></p>
+                    <p class="pl-4">
+                        Results are based on theoretical calculations and standard test conditions. Actual braking performance 
+                        may vary significantly based on track conditions, weather, vehicle condition, and other factors. 
+                        Always conduct physical testing for safety-critical applications.
+                    </p>
+                    
+                    <p><strong>Hydraulic Motor Calculator:</strong></p>
+                    <p class="pl-4">
+                        Calculations assume ideal conditions and manufacturer specifications. Real-world performance may differ 
+                        due to fluid properties, temperature variations, system losses, and component wear.
+                    </p>
+                    
+                    <p><strong>Load Distribution & Qmax Calculators:</strong></p>
+                    <p class="pl-4">
+                        Results are estimates based on input parameters. Actual load distributions may be affected by dynamic 
+                        loading conditions, structural variations, and environmental factors not accounted for in calculations.
+                    </p>
+
+                    <h2 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Contact</h2>
+                    <p>
+                        If you have questions about this Disclaimer or the appropriate use of our calculation tools, 
+                        please contact us at support@premnathengineering.com
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer at bottom of page -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto py-8">
+        <!-- Footer with white/dark background and top border -->
+        <div class="px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <!-- Footer content container with responsive layout -->
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+            <!-- Copyright notice -->
+            <nav class="flex flex-wrap gap-4 mt-2">
+                <!-- Footer navigation links -->
+                <a href="/privacy-policy.html" class="text-xs text-blue-600 hover:underline">Privacy Policy</a>
+                <!-- Link to privacy policy -->
+                <a href="/terms.html" class="text-xs text-blue-600 hover:underline">Terms</a>
+                <!-- Link to terms of service -->
+                <a href="/faq.html" class="text-xs text-blue-600 hover:underline">FAQ</a>
+                <!-- Link to frequently asked questions -->
+                <a href="/documentation.html" class="text-xs text-blue-600 hover:underline">Documentation</a>
+                <!-- Link to documentation -->
+                <a href="/disclaimer.html" class="text-xs text-blue-600 hover:underline">Disclaimer</a>
+                <!-- Link to disclaimer (current page) -->
+            </nav>
+        </div>
+    </footer>
+
+    <script>
+        // Theme persistence script - runs when page loads
+        // Checks if user previously selected dark mode and applies it
+        if (localStorage.getItem('theme') === 'dark') {
+            // Add 'dark' class to html element to enable dark mode styles
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

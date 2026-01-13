@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!-- ========================================================================================
+     403 ERROR PAGE - Access Denied
+     ================================================================================
+     Purpose: HTTP 403 Forbidden error page for unauthorized access attempts
+     Framework: Static HTML with Tailwind CSS
+     Features: User-friendly error display, navigation back to home, professional design
+     Dependencies: Tailwind CSS (CDN), Google Fonts (Oswald, Roboto)
+     Error Type: Access forbidden due to insufficient permissions or authentication
+     Accessibility: Clear error messaging, navigation options, semantic HTML
+     ================================================================================ -->
+<html lang="en">
+<!-- HTML root element with language set to English for accessibility and SEO -->
+
+<head>
+    <!-- ========================================================================================
+         DOCUMENT HEAD - Metadata and External Resources
+         ================================================================================
+         Contains: Character encoding, viewport settings, page title, CSS frameworks,
+         custom fonts, and responsive design configuration
+         ================================================================================ -->
+    <meta charset="UTF-8">
+    <!-- Character encoding declaration - ensures proper display of special characters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Responsive viewport meta tag - enables mobile-friendly scaling and layout -->
+    <title>403 - Access Denied | Premnath Engineering</title>
+    <!-- Page title displayed in browser tab and bookmarks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS framework loaded from CDN - provides utility-first CSS classes -->
+
+    <!-- ========================================================================================
+         GOOGLE FONTS - Typography Loading
+         ================================================================================
+         Loads: Oswald font family (weights 300-700) for headings, Roboto (weights 300-700) for body text
+         Purpose: Professional typography for error page readability
+         ================================================================================ -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- ========================================================================================
+         TAILWIND CONFIGURATION - Custom Theme Settings
+         ================================================================================
+         Configures: Dark mode support, custom font families, brand colors for consistency
+         Colors: Custom page background, surface colors, and brand blue
+         ================================================================================ -->
+    <script>
+        // Tailwind CSS configuration object for custom theme extensions
+        tailwind.config = {
+            darkMode: 'class', // Enables dark mode using CSS class toggling
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'], // Default sans-serif font for body text
+                        display: ['Oswald', 'sans-serif'], // Display font for headings and branding
+                    },
+                    colors: {
+                        page: '#f0f2f5', // Custom page background color
+                        surface: '#ffffff', // Surface color for cards and containers
+                        brand: '#1d4ed8', // Brand blue color for links and accents
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-page dark:bg-gray-900 min-h-screen flex flex-col">
+    <!-- ========================================================================================
+         MAIN BODY - 403 Error Page Layout
+         ================================================================================
+         Layout: Flex column layout with navbar and centered error content
+         Features: Dark mode support, minimum height for full viewport coverage
+         Purpose: User-friendly display of access denied error with navigation options
+         ================================================================================ -->
+
+    <!-- ========================================================================================
+         NAVIGATION BAR - Minimal Header for Error Page
+         ================================================================================ -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16">
+        <!-- Minimal navigation bar with logo only for error pages -->
+        <div class="max-w-7xl mx-auto px-6 h-full flex items-center">
+            <!-- Centered container with logo link to homepage -->
+            <a href="/" class="flex items-center gap-3">
+                <!-- Logo link to homepage for navigation from error state -->
+                <img src="/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <!-- Company logo image with responsive sizing and hover effects -->
+                <div class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] bg-black text-white hidden items-center justify-center font-display font-bold text-xl rounded group-hover:bg-blue-700 transition shadow-sm">P</div>
+                <!-- Fallback logo text if image fails to load -->
+            </a>
+        </div>
+    </nav>
+
+    <!-- 403 Content -->
+    <main class="flex-1 flex items-center justify-center px-6 py-12">
+        <div class="text-center max-w-lg">
+            <!-- Lock Icon -->
+            <div class="mb-8">
+                <div class="inline-flex items-center justify-center w-32 h-32 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+                    <svg class="w-16 h-16 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Large 403 Text -->
+            <span class="text-6xl font-display font-bold text-amber-500 block mb-4">403</span>
+            
+            <!-- Error Message -->
+            <h1 class="text-3xl font-display font-bold text-gray-900 dark:text-white mb-4">
+                Access Denied
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-8">
+                You don't have permission to access this page. This could be because:
+            </p>
+            
+            <!-- Reasons List -->
+            <ul class="text-left text-gray-600 dark:text-gray-400 mb-8 space-y-2 max-w-md mx-auto">
+                <li class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>You're not logged in or your session has expired</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Your account doesn't have the required permissions</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Your license has expired or is not active</span>
+                </li>
+            </ul>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/login.html" class="inline-flex items-center justify-center gap-2 bg-brand hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition shadow-lg hover:shadow-xl">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Login
+                </a>
+                <a href="/" class="inline-flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold px-8 py-4 rounded-lg transition">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Go Home
+                </a>
+            </div>
+            
+            <!-- Contact Support -->
+            <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    If you believe this is an error, please contact support for assistance.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6">
+            <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+                <nav class="flex flex-wrap gap-4 mt-2">
+                    <a href="/privacy-policy.html" class="text-xs text-blue-600 hover:underline">Privacy Policy</a>
+                    <a href="/terms.html" class="text-xs text-blue-600 hover:underline">Terms</a>
+                    <a href="/faq.html" class="text-xs text-blue-600 hover:underline">FAQ</a>
+                    <a href="/documentation.html" class="text-xs text-blue-600 hover:underline">Documentation</a>
+                    <a href="/disclaimer.html" class="text-xs text-blue-600 hover:underline">Disclaimer</a>
+                </nav>
+            </div>
+    </footer>
+
+    <script>
+        // Theme initialization
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

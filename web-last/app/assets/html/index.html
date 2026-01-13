@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<!-- ========================================================================================
+     INDEX - Premnath Engineering Works Dashboard
+     ================================================================================
+     Purpose: Main landing page and tool dashboard for engineering calculations
+     Framework: Static HTML with Tailwind CSS and vanilla JavaScript
+     Features: Responsive design, dark mode toggle, role-based authentication,
+               modular tool grid with access control, messaging system
+     Dependencies: Tailwind CSS (CDN), Google Fonts (Oswald, Roboto)
+     Accessibility: Semantic HTML, proper heading hierarchy, keyboard navigation
+     ================================================================================ -->
+<html lang="en">
+<head>
+  <!-- Character encoding for proper text display -->
+  <meta charset="UTF-8" />
+  <!-- Responsive viewport configuration -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Page title for browser tab -->
+  <title>Premnath Engineering Works</title>
+  <!-- Favicon -->
+  <link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
+  <!-- Tailwind CSS framework from CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for professional typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Roboto', 'sans-serif'],
+            display: ['Oswald', 'sans-serif'],
+          },
+          colors: {
+            // Industrial Grays
+            page: '#f0f2f5', 
+            surface: '#ffffff',
+            dark: '#212529',
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Watermark Number Effect (placed here to keep Tailwind complex arbitrary values clean) */
+    .watermark-text::before {
+        content: attr(data-index);
+        position: absolute;
+        top: -15px;
+        right: 10px;
+        font-family: 'Oswald', sans-serif;
+        font-size: 6rem;
+        font-weight: 700;
+        color: #d1d5db;
+        z-index: 0;
+        transition: all 0.3s ease;
+        opacity: 0.5;
+    }
+    .group:hover .watermark-text::before {
+        transform: translateY(5px) scale(1.05);
+        opacity: 0.35;
+    }
+    /* Colorful watermarks on hover for each card using data attributes */
+    .watermark-text[data-color="blue"]:hover::before { color: #1d4ed8 !important; }
+    .watermark-text[data-color="green"]:hover::before { color: #15803d !important; }
+    .watermark-text[data-color="orange"]:hover::before { color: #ea580c !important; }
+    .watermark-text[data-color="purple"]:hover::before { color: #7e22ce !important; }
+    .watermark-text[data-color="yellow"]:hover::before { color: #ca8a04 !important; }
+    .watermark-text[data-color="red"]:hover::before { color: #dc2626 !important; }
+    
+    /* Dark mode watermark */
+    .dark .watermark-text::before {
+        color: #374151;
+        opacity: 0.4;
+    }
+    .dark .group:hover .watermark-text::before {
+        opacity: 0.3;
+    }
+  </style>
+
+  <script>
+    // --- API CONFIGURATION ---
+    // Change this for production deployment
+    const API_BASE_URL = window.location.origin;
+    
+    // --- AUTH LOGIC ---
+    // Default avatar - user icon in circle
+    const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23e0e7ff'/%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' fill='%236366f1'/%3E%3C/svg%3E";
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // Dark mode initialization
+      const theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('sun-icon').classList.add('hidden');
+        document.getElementById('moon-icon').classList.remove('hidden');
+      }
+
+      // Theme toggle
+      document.getElementById('theme-toggle').addEventListener('click', function() {
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        
+        if (html.classList.contains('dark')) {
+          html.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+          sunIcon.classList.remove('hidden');
+          moonIcon.classList.add('hidden');
+        } else {
+          html.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+        }
+      });
+
+      const token = localStorage.getItem("token");
+      const authSection = document.getElementById("auth-section");
+      
+      // Check if Admin or Manager is logged in
+      const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+      const isManager = sessionStorage.getItem('isManager') === 'true';
+      
+      // Hide message icon for Admin/Manager
+      const messageIconBtn = document.getElementById('messageIconBtn');
+      if (isAdmin || isManager) {
+        if (messageIconBtn) messageIconBtn.style.display = 'none';
+      }
+
+      if (isAdmin) {
+        // Admin special navbar
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <a href="/admin.html" class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold transition shadow-lg">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                Admin Panel
+             </a>
+             <div class="flex items-center gap-2 px-3 py-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                <span class="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase">GOLD LICENSE</span>
+             </div>
+          </div>
+        `;
+      } else if (isManager) {
+        // Manager special navbar
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <a href="/manager.html" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition shadow-lg">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                Manager Panel
+             </a>
+             <div class="flex items-center gap-2 px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase">SILVER LICENSE</span>
+             </div>
+          </div>
+        `;
+      } else if (token) {
+        // Show logged-in user navbar
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <div class="text-right hidden sm:block">
+                <div class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Operator</div>
+                <div id="userName" class="text-sm font-bold text-gray-900 dark:text-gray-100 font-display uppercase tracking-wide">Engineer</div>
+             </div>
+             <img id="profileIcon" src="${DEFAULT_AVATAR}" class="w-10 h-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:border-black dark:hover:border-white transition" onclick="window.location.href='/profile.html'">
+             <button onclick="logout()" class="ml-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition p-2 border-l border-gray-200 dark:border-gray-600 pl-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+             </button>
+          </div>
+        `;
+        loadProfilePhoto();
+      } else {
+        authSection.innerHTML = `
+          <div class="flex items-center gap-3">
+             <img id="siteAdminAvatar" src="/assets/images/default-avatar.png" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-200 dark:border-gray-600 hidden" title="Admin">
+             <a href="/login.html" class="font-display font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white uppercase tracking-wide transition text-sm">Log In</a>
+             <a href="/signup.html" class="font-display bg-black dark:bg-gray-700 text-white px-6 py-2.5 uppercase tracking-wide text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition shadow-lg rounded-sm">Sign Up</a>
+          </div>
+        `;
+      }
+    });
+
+    async function loadProfilePhoto() {
+      const userId = parseInt(localStorage.getItem("user_id"));
+      if (!userId || isNaN(userId)) {
+        // If no logged-in user, still try to load site-wide admin avatar
+        loadSiteAdminAvatar();
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/profile?user_id=${userId}`);
+        if (res.ok) {
+           const data = await res.json();
+           console.log('Profile data:', data);
+           if(data.profile_photo_path) {
+              const timestamp = new Date().getTime();
+              document.getElementById('profileIcon').src = data.profile_photo_path + '?t=' + timestamp;
+           } else {
+              // No user photo — try loading server-persisted admin photo (if any) so header shows avatar immediately
+              try {
+                const resAdmin = await fetch('/admin/photo');
+                if (resAdmin.ok) {
+                  const adminData = await resAdmin.json();
+                  if (adminData.path) {
+                    document.getElementById('profileIcon').src = adminData.path + '?t=' + Date.now();
+                  }
+                }
+              } catch (e) {
+                // ignore
+              }
+           }
+           // Update user name
+           const userNameDiv = document.getElementById('userName');
+           if (userNameDiv) {
+             userNameDiv.textContent = (data.name || data.email || 'Engineer').toUpperCase();
+           }
+        } else {
+          console.log('Profile fetch failed:', res.status);
+        }
+      } catch (err) {
+        console.log('Profile fetch error:', err);
+      }
+    }
+
+    async function loadSiteAdminAvatar() {
+      try {
+        const el = document.getElementById('siteAdminAvatar');
+        if (!el) return;
+        const res = await fetch('/admin/photo');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.path) {
+          el.src = data.path + '?t=' + Date.now();
+          el.classList.remove('hidden');
+        }
+      } catch (e) {
+        console.error('Failed to load site admin avatar:', e);
+      }
+    }
+    
+    async function checkUserManagerStatus(userId, authSection) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/profile?user_id=${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          
+          if (data.is_manager) {
+            // User is a promoted manager - show manager navbar
+            sessionStorage.setItem('isUserManager', 'true');
+            const messageIconBtn = document.getElementById('messageIconBtn');
+            if (messageIconBtn) messageIconBtn.style.display = 'none';
+            
+            authSection.innerHTML = `
+              <div class="flex items-center gap-4">
+                 <a href="/manager.html" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition shadow-lg">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                    Manager Panel
+                 </a>
+                 <div class="flex items-center gap-2 px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                    <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase">SILVER LICENSE</span>
+                 </div>
+              </div>
+            `;
+          } else {
+            // Regular user - show normal navbar
+            authSection.innerHTML = `
+              <div class="flex items-center gap-4">
+                 <div class="text-right hidden sm:block">
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Operator</div>
+                    <div class="text-sm font-bold text-gray-900 dark:text-gray-100 font-display uppercase tracking-wide">Engineer</div>
+                 </div>
+                 <img id="profileIcon" src="${DEFAULT_AVATAR}" class="w-10 h-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:border-black dark:hover:border-white transition" onclick="window.location.href='/profile.html'">
+                 <button onclick="logout()" class="ml-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition p-2 border-l border-gray-200 dark:border-gray-600 pl-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                 </button>
+              </div>
+            `;
+            loadProfilePhoto();
+          }
+        }
+      } catch (err) {
+        console.error('Failed to check user manager status:', err);
+        // Show default navbar on error
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <div class="text-right hidden sm:block">
+                <div class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Operator</div>
+                <div class="text-sm font-bold text-gray-900 dark:text-gray-100 font-display uppercase tracking-wide">Engineer</div>
+             </div>
+             <img id="profileIcon" src="${DEFAULT_AVATAR}" class="w-10 h-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:border-black dark:hover:border-white transition" onclick="window.location.href='/profile.html'">
+             <button onclick="logout()" class="ml-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition p-2 border-l border-gray-200 dark:border-gray-600 pl-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+             </button>
+          </div>
+        `;
+        loadProfilePhoto();
+      }
+    }
+
+    function logout() {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = "/login.html";
+    }
+
+    function checkAccess(event, url) {
+      event.preventDefault();
+      
+      // BYPASS for Admin/Manager - they have special access (Gold/Silver license)
+      const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+      const isManager = sessionStorage.getItem('isManager') === 'true';
+      const isUserManager = sessionStorage.getItem('isUserManager') === 'true';
+      
+      if (isAdmin || isManager || isUserManager) {
+          console.log('Admin/Manager/User-Manager access - Full access granted');
+          window.location.href = url;
+          return;
+      }
+      
+      const token = localStorage.getItem("token");
+      const isLicenseActive = localStorage.getItem("is_license_active") === "true";
+
+      if (!token) {
+        window.location.href = "/login.html";
+        return;
+      }
+      if (!isLicenseActive) {
+        showLicenseMessage();
+        return;
+      }
+      window.location.href = url;
+    }
+
+    function showLicenseMessage() {
+      // Remove existing message if any
+      const existing = document.getElementById('license-message-overlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'license-message-overlay';
+      overlay.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4';
+      overlay.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full p-8 text-center animate-[fadeIn_0.3s_ease-out]">
+          <div class="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">License Required</h3>
+          <p class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+            You don't have an active license yet. Please contact us to get your license and then activate it from your profile page.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button onclick="document.getElementById('license-message-overlay').remove(); openMessageModal('license')" 
+               class="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+              Request License
+            </button>
+            <a href="/profile.html" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+              Activate License
+            </a>
+          </div>
+          <button onclick="document.getElementById('license-message-overlay').remove()" 
+                  class="mt-6 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm font-medium">
+            Close
+          </button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+      });
+    }
+  </script>
+</head>
+
+<body class="bg-page dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans border-t-4 border-dark flex flex-col min-h-screen">
+
+  <!-- Navigation Bar - Site header with logo, theme toggle, and authentication controls -->
+  <nav class="bg-surface dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-20 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 h-full flex justify-between items-center">
+        <!-- Company Logo with fallback -->
+        <a href="/" class="flex items-center gap-3 group">
+            <img src="/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] bg-black text-white hidden items-center justify-center font-display font-bold text-xl rounded group-hover:bg-blue-700 transition shadow-sm">P</div>
+        </a>
+        
+        <!-- Right side controls: messages, theme toggle, auth section -->
+        <div class="flex items-center gap-4">
+             <!-- Message Icon Button - opens messaging modal -->
+             <button type="button" onclick="openMessageModal(null, event)" id="messageIconBtn" class="relative p-2 rounded-lg bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 transition" title="Messages">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                </svg>
+                <span id="unreadBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">0</span>
+             </button>
+
+             <button type="button" id="theme-toggle" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition">
+                <svg id="sun-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="moon-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+            
+            <div id="auth-section"></div>
+        </div>
+    </div>
+  </nav>
+
+  <!-- INDUSTRIAL HEADER -->
+  <div class="bg-surface dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div class="px-6 py-12">
+          <div class="flex flex-col md:flex-row justify-between items-end">
+              <div class="max-w-2xl">
+                  <h2 class="font-display text-4xl md:text-5xl font-medium text-gray-900 dark:text-gray-100 mb-4 tracking-tight">ENGINEERING CONSOLE</h2>
+                  <p class="text-gray-500 dark:text-gray-400 text-lg font-light leading-relaxed">
+                      Advanced simulation suite for hydraulic motor analysis, tractive effort, and rail vehicle safety validation.
+                  </p>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- Engineering Tools Grid - Main dashboard content with access-controlled calculator links -->
+  <main class="flex-grow py-12 px-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          
+          <!-- Hydraulic Motor Calculator Card - First tool in grid -->
+          <div onclick="checkAccess(event, '/calculator.html')" 
+               class="group relative bg-white dark:bg-gray-800 rounded-md border-l-[6px] border-blue-700 shadow-sm hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col h-full overflow-hidden watermark-text cursor-pointer" 
+               data-index="01" data-color="blue">
+              
+              <div class="p-8 pb-4 flex-grow z-10">
+                  <div class="flex justify-between items-start">
+                      <!-- Icon -->
+                      <div class="w-[60px] h-[60px] bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-105 group-hover:bg-blue-700 group-hover:border-blue-700 group-hover:text-white text-blue-700">
+                          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                      </div>
+                  </div>
+                  <h3 class="font-display text-2xl text-gray-900 dark:text-gray-100 mb-3 group-hover:text-blue-700 transition-colors">Hydraulic Motor</h3>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed font-light">
+                      Calculate pump displacement (cc), analyze flow rates, and simulate vehicle speed parameters under variable pressure loads.
+                  </p>
+              </div>
+              <!-- Button -->
+              <div class="px-8 pb-8 z-10 mt-auto">
+                  <div class="py-3.5 bg-transparent border-2 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 font-display font-semibold uppercase tracking-widest text-xs rounded transition-all duration-200 flex items-center justify-center gap-2 group-hover:bg-blue-700 group-hover:border-blue-700 group-hover:text-white">
+                      Launch Tool
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                  </div>
+              </div>
+          </div>
+
+          <!-- 2. TRACTIVE EFFORT (Green) -->
+          <div onclick="checkAccess(event, '/tractive_effort_calculator.html')" 
+               class="group relative bg-white dark:bg-gray-800 rounded-md border-l-[6px] border-green-700 shadow-sm hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col h-full overflow-hidden watermark-text cursor-pointer" 
+               data-index="02" data-color="green">
+              
+              <div class="p-8 pb-4 flex-grow z-10">
+                  <div class="w-[60px] h-[60px] bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-105 group-hover:bg-green-700 group-hover:border-green-700 group-hover:text-white text-green-700">
+                      <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  <h3 class="font-display text-2xl text-gray-900 dark:text-gray-100 mb-3 group-hover:text-green-700 transition-colors">Tractive Effort</h3>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed font-light">
+                      Rail Horsepower calculation and OHE current consumption logic.
+                  </p>
+              </div>
+              <div class="px-8 pb-8 z-10 mt-auto">
+                  <div class="py-3.5 bg-transparent border-2 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 font-display font-semibold uppercase tracking-widest text-xs rounded transition-all duration-200 flex items-center justify-center gap-2 group-hover:bg-green-700 group-hover:border-green-700 group-hover:text-white">
+                      Launch Tool
+                  </div>
+              </div>
+          </div>
+
+          <!-- 3. LOAD DISTRIBUTION (Orange) -->
+          <div onclick="checkAccess(event, '/load_distribution_calculator.html')" 
+               class="group relative bg-white dark:bg-gray-800 rounded-md border-l-[6px] border-orange-600 shadow-sm hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col h-full overflow-hidden watermark-text cursor-pointer" 
+               data-index="03" data-color="orange">
+              
+              <div class="p-8 pb-4 flex-grow z-10">
+                  <div class="w-[60px] h-[60px] bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-105 group-hover:bg-orange-600 group-hover:border-orange-600 group-hover:text-white text-orange-600">
+                      <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>
+                  </div>
+                  <h3 class="font-display text-2xl text-gray-900 dark:text-gray-100 mb-3 group-hover:text-orange-600 transition-colors">Load Distribution</h3>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed font-light">
+                      Wheel load balancing (Q1-Q4) and safety limit checks (ΔQ/Q).
+                  </p>
+              </div>
+              <div class="px-8 pb-8 z-10 mt-auto">
+                  <div class="py-3.5 bg-transparent border-2 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 font-display font-semibold uppercase tracking-widest text-xs rounded transition-all duration-200 flex items-center justify-center gap-2 group-hover:bg-orange-600 group-hover:border-orange-600 group-hover:text-white">
+                      Launch Tool
+                  </div>
+              </div>
+          </div>
+
+          <!-- 4. QMAX SAFETY (Purple) -->
+          <div onclick="checkAccess(event, '/qmax_calculator.html')" 
+               class="group relative bg-white dark:bg-gray-800 rounded-md border-l-[6px] border-purple-700 shadow-sm hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col h-full overflow-hidden watermark-text cursor-pointer" 
+               data-index="04" data-color="purple">
+              
+              <div class="p-8 pb-4 flex-grow z-10">
+                  <div class="w-[60px] h-[60px] bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-105 group-hover:bg-purple-700 group-hover:border-purple-700 group-hover:text-white text-purple-700">
+                      <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                  <h3 class="font-display text-2xl text-gray-900 dark:text-gray-100 mb-3 group-hover:text-purple-700 transition-colors">Qmax calculator</h3>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed font-light">
+                      Vertical force analysis based on rail profile diameter.
+                  </p>
+              </div>
+              <div class="px-8 pb-8 z-10 mt-auto">
+                  <div class="py-3.5 bg-transparent border-2 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 font-display font-semibold uppercase tracking-widest text-xs rounded transition-all duration-200 flex items-center justify-center gap-2 group-hover:bg-purple-700 group-hover:border-purple-700 group-hover:text-white">
+                      Launch Tool
+                  </div>
+              </div>
+          </div>
+
+          <!-- 5. BRAKING PERFORMANCE (Dark) -->
+          <div onclick="checkAccess(event, '/braking_calculator.html')" 
+               class="group relative bg-white dark:bg-gray-800 rounded-md border-l-[6px] border-yellow-600 shadow-sm hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col h-full overflow-hidden watermark-text cursor-pointer" 
+               data-index="05" data-color="yellow">
+              
+              <div class="p-8 pb-4 flex-grow z-10">
+                  <div class="flex justify-between items-start">
+                      <div class="w-[60px] h-[60px] bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-105 group-hover:bg-yellow-800 group-hover:border-yellow-800 group-hover:text-white text-yellow-800">
+                          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      </div>
+                  </div>
+                  <h3 class="font-display text-2xl text-gray-900 dark:text-gray-100 mb-3 group-hover:text-black dark:group-hover:text-white transition-colors">Braking force calculator</h3>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed font-light">
+                      Stopping distance and braking force validation standards.
+                  </p>
+              </div>
+              <div class="px-8 pb-8 z-10 mt-auto">
+                  <div class="py-3.5 bg-transparent border-2 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 font-display font-semibold uppercase tracking-widest text-xs rounded transition-all duration-200 flex items-center justify-center gap-2 group-hover:bg-gray-800 group-hover:border-gray-800 group-hover:text-white">
+                      Launch Tool
+                  </div>
+              </div>
+          </div>
+
+          <!-- 6. PERFORMANCE REPORTS (Red) -->
+          <div onclick="checkAccess(event, '/vehicle_performance_calculator.html')" 
+               class="group relative bg-white dark:bg-gray-800 rounded-md border-l-[6px] border-red-600 shadow-sm hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col h-full overflow-hidden watermark-text cursor-pointer" 
+               data-index="06" data-color="red">
+              
+              <div class="p-8 pb-4 flex-grow z-10">
+                  <div class="w-[60px] h-[60px] bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-105 group-hover:bg-red-600 group-hover:border-red-600 group-hover:text-white text-red-600">
+                      <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
+                  </div>
+                  <h3 class="font-display text-2xl text-gray-900 dark:text-gray-100 mb-3 group-hover:text-red-600 transition-colors">Shunting Capability and Performance</h3>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed font-light">
+                      Generate complete analysis graphs: Speed vs Slope & Torque.
+                  </p>
+              </div>
+              <div class="px-8 pb-8 z-10 mt-auto">
+                  <div class="py-3.5 bg-transparent border-2 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 font-display font-semibold uppercase tracking-widest text-xs rounded transition-all duration-200 flex items-center justify-center gap-2 group-hover:bg-red-600 group-hover:border-red-600 group-hover:text-white">
+                      Launch Tool
+                  </div>
+              </div>
+          </div>
+
+      </div>
+  </main>
+  
+  <!-- FOOTER -->
+  <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto py-8">
+      <div class="px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+          <nav class="flex flex-wrap gap-4 mt-2">
+            <a href="/privacy-policy.html" class="text-xs text-blue-600 hover:underline">Privacy Policy</a>
+            <a href="/terms.html" class="text-xs text-blue-600 hover:underline">Terms</a>
+            <a href="/faq.html" class="text-xs text-blue-600 hover:underline">FAQ</a>
+            <a href="/documentation.html" class="text-xs text-blue-600 hover:underline">Documentation</a>
+            <a href="/disclaimer.html" class="text-xs text-blue-600 hover:underline">Disclaimer</a>
+          </nav>
+      </div>
+  </footer>
+
+  <!-- MESSAGE MODAL -->
+  <div id="messageModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col animate-[fadeIn_0.2s_ease-out]">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+          </svg>
+          Messages
+        </h2>
+        <button onclick="closeMessageModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-gray-200 dark:border-gray-700">
+        <button onclick="switchMessageTab('new')" id="tabNew" class="flex-1 py-3 px-4 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20 transition">
+          New Message
+        </button>
+        <button onclick="switchMessageTab('unread')" id="tabUnread" class="flex-1 py-3 px-4 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition relative">
+          Unread
+          <span id="unreadTabBadge" class="hidden absolute top-1 right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+        </button>
+        <button onclick="switchMessageTab('all')" id="tabAll" class="flex-1 py-3 px-4 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+          All Messages
+        </button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="flex-1 overflow-y-auto">
+        <!-- New Message Tab -->
+        <div id="contentNew" class="p-5">
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Quick options:</p>
+          <div class="grid grid-cols-2 gap-3 mb-5">
+            <button onclick="selectQuickOption('license')" class="quick-option p-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-left hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition group">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                <span class="font-medium text-gray-700 dark:text-gray-300">Want License Key</span>
+              </div>
+            </button>
+            <button onclick="selectQuickOption('help')" class="quick-option p-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-left hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition group">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <span class="font-medium text-gray-700 dark:text-gray-300">License / Other Help</span>
+              </div>
+            </button>
+            <button onclick="selectQuickOption('suggestion')" class="quick-option p-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-left hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition group">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                <span class="font-medium text-gray-700 dark:text-gray-300">Calculation Suggestion</span>
+              </div>
+            </button>
+            <button onclick="selectQuickOption('error')" class="quick-option p-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-left hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition group">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="font-medium text-gray-700 dark:text-gray-300">Report Error</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject</label>
+              <input type="text" id="msgSubject" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="Enter subject...">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Message</label>
+              <textarea id="msgContent" rows="4" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none" placeholder="Type your message..."></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attach File (optional)</label>
+              <div class="relative">
+                <input type="file" id="msgFile" class="hidden" onchange="updateFileName()">
+                <button onclick="document.getElementById('msgFile').click()" class="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition flex items-center justify-center gap-2">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                  <span id="fileNameDisplay">Choose file to attach</span>
+                </button>
+              </div>
+            </div>
+            <button onclick="sendMessage()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              Send Message
+            </button>
+          </div>
+        </div>
+
+        <!-- Unread Messages Tab -->
+        <div id="contentUnread" class="p-5 hidden">
+          <div id="unreadMessagesList" class="space-y-3">
+            <div class="text-center py-10 text-gray-500 dark:text-gray-400">
+              <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+              <p>Loading messages...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- All Messages Tab -->
+        <div id="contentAll" class="p-5 hidden">
+          <div id="allMessagesList" class="space-y-3">
+            <div class="text-center py-10 text-gray-500 dark:text-gray-400">
+              <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+              <p>Loading messages...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Detail Modal -->
+  <div id="messageDetailModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[10000] p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col animate-[fadeIn_0.2s_ease-out]">
+      <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <h3 id="detailSubject" class="text-lg font-bold text-gray-900 dark:text-white">Message Details</h3>
+        <button onclick="closeMessageDetail()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <span id="detailFrom" class="text-sm px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full font-medium"></span>
+          <span id="detailTime" class="text-xs text-gray-500 dark:text-gray-400"></span>
+        </div>
+        <div id="detailContent" class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap"></div>
+        <div id="detailAttachment" class="mt-4 hidden">
+          <a id="detailFileLink" href="#" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+            <span id="detailFileName"></span>
+          </a>
+        </div>
+      </div>
+      <div class="p-5 border-t border-gray-200 dark:border-gray-700">
+        <button onclick="replyToMessage()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+          Reply
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Message Modal Functions
+    let currentUserId = null;
+    let currentMessageId = null;
+
+    async function loadUnreadCount() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      try {
+        currentUserId = parseInt(localStorage.getItem('user_id'));
+        if (!currentUserId || isNaN(currentUserId)) return;
+        
+        const response = await fetch(`/messages/user/${currentUserId}/unread-count`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const badge = document.getElementById('unreadBadge');
+          const tabBadge = document.getElementById('unreadTabBadge');
+          
+          if (data.unread_count > 0) {
+            badge.textContent = data.unread_count > 9 ? '9+' : data.unread_count;
+            badge.classList.remove('hidden');
+            if (tabBadge) {
+              tabBadge.textContent = data.unread_count;
+              tabBadge.classList.remove('hidden');
+            }
+          } else {
+            badge.classList.add('hidden');
+            if (tabBadge) tabBadge.classList.add('hidden');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading unread count:', error);
+      }
+    }
+
+    function openMessageModal(preset = null, event = null) {
+      if (event) event.preventDefault();
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+      
+      // Get user ID from localStorage (stored during login)
+      currentUserId = localStorage.getItem('user_id');
+      
+      if (!currentUserId) {
+        window.location.href = '/login.html';
+        return;
+      }
+      
+      console.log('Current user ID:', currentUserId);
+      
+      const modal = document.getElementById('messageModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        console.log('Message modal opened');
+      } else {
+        console.error('Message modal not found!');
+      }
+      
+      switchMessageTab('new');
+      
+      if (preset === 'license') {
+        selectQuickOption('license');
+      }
+    }
+
+    function closeMessageModal() {
+      document.getElementById('messageModal').classList.add('hidden');
+      document.getElementById('messageModal').classList.remove('flex');
+      clearMessageForm();
+    }
+
+    function clearMessageForm() {
+      document.getElementById('msgSubject').value = '';
+      document.getElementById('msgContent').value = '';
+      document.getElementById('msgFile').value = '';
+      document.getElementById('fileNameDisplay').textContent = 'Choose file to attach';
+      document.querySelectorAll('.quick-option').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+      });
+    }
+
+    function switchMessageTab(tab) {
+      ['new', 'unread', 'all'].forEach(t => {
+        const tabBtn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const content = document.getElementById(`content${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        
+        if (t === tab) {
+          tabBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50', 'dark:bg-blue-900/20');
+          tabBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+          content.classList.remove('hidden');
+        } else {
+          tabBtn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50', 'dark:bg-blue-900/20');
+          tabBtn.classList.add('text-gray-500', 'dark:text-gray-400');
+          content.classList.add('hidden');
+        }
+      });
+
+      if (tab === 'unread') loadMessages('unread');
+      if (tab === 'all') loadMessages('all');
+    }
+
+    function selectQuickOption(option) {
+      document.querySelectorAll('.quick-option').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+      });
+      
+      const subjects = {
+        'license': 'Request for License Key',
+        'help': 'License / Other Help Required',
+        'suggestion': 'Calculation Suggestion',
+        'error': 'Error Report'
+      };
+      
+      const messages = {
+        'license': 'Hi,\n\nI would like to request a license key for accessing the engineering calculation tools.\n\nPlease let me know the process and requirements.\n\nThank you.',
+        'help': 'Hi,\n\nI need assistance with:\n\n[Please describe your issue here]\n\nThank you.',
+        'suggestion': 'Hi,\n\nI have a suggestion for the calculation tools:\n\n[Please describe your suggestion here]\n\nThank you.',
+        'error': 'Hi,\n\nI encountered an error:\n\nTool: [Tool name]\nError: [Error description]\nSteps to reproduce: [Steps]\n\nThank you.'
+      };
+      
+      document.getElementById('msgSubject').value = subjects[option] || '';
+      document.getElementById('msgContent').value = messages[option] || '';
+      
+      event.target.closest('.quick-option').classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+    }
+
+    function updateFileName() {
+      const file = document.getElementById('msgFile').files[0];
+      if (file) {
+        document.getElementById('fileNameDisplay').textContent = file.name;
+      } else {
+        document.getElementById('fileNameDisplay').textContent = 'Choose file to attach';
+      }
+    }
+
+    async function sendMessage() {
+      if (!currentUserId) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      const subject = document.getElementById('msgSubject').value.trim();
+      const content = document.getElementById('msgContent').value.trim();
+      const file = document.getElementById('msgFile').files[0];
+
+      if (!content) {
+        showToast('Please enter a message', 'error');
+        return;
+      }
+
+      try {
+        let response;
+        
+        if (file) {
+          const formData = new FormData();
+          formData.append('sender_id', currentUserId);
+          formData.append('content', content);
+          if (subject) formData.append('subject', subject);
+          formData.append('file', file);
+
+          response = await fetch('/messages/send-with-file', {
+            method: 'POST',
+            body: formData
+          });
+        } else {
+          response = await fetch('/messages/send', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              sender_id: parseInt(currentUserId),
+              content: content,
+              subject: subject || null
+            })
+          });
+        }
+
+        if (response.ok) {
+          showToast('Message sent successfully!', 'success');
+          clearMessageForm();
+          closeMessageModal();
+        } else {
+          const error = await response.json();
+          showToast(error.detail || 'Failed to send message', 'error');
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        showToast('Failed to send message', 'error');
+      }
+    }
+
+    async function loadMessages(type) {
+      if (!currentUserId) return;
+
+      const listId = type === 'unread' ? 'unreadMessagesList' : 'allMessagesList';
+      const list = document.getElementById(listId);
+      
+      try {
+        const response = await fetch(`/messages/user/${currentUserId}`);
+
+        if (response.ok) {
+          const messages = await response.json();
+          let filteredMessages = messages;
+          
+          if (type === 'unread') {
+            filteredMessages = messages.filter(m => !m.is_read && m.is_from_admin);
+          }
+
+          if (filteredMessages.length === 0) {
+            list.innerHTML = `
+              <div class="text-center py-10 text-gray-500 dark:text-gray-400">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                <p>${type === 'unread' ? 'No unread messages' : 'No messages yet'}</p>
+              </div>
+            `;
+            return;
+          }
+
+          list.innerHTML = filteredMessages.map(msg => `
+            <div onclick="openMessageDetail(${msg.id})" class="p-4 border ${msg.is_read ? 'border-gray-200 dark:border-gray-700' : 'border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20'} rounded-xl cursor-pointer hover:shadow-md transition">
+              <div class="flex items-start justify-between mb-2">
+                <span class="text-xs px-2 py-1 ${msg.is_from_admin ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'} rounded-full font-medium">
+                  ${msg.is_from_admin ? 'Admin' : 'You'}
+                </span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">${formatDate(msg.created_at)}</span>
+              </div>
+              <h4 class="font-semibold text-gray-900 dark:text-white mb-1">${msg.subject || 'No Subject'}</h4>
+              <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">${msg.content}</p>
+              ${msg.file_name ? `<div class="mt-2 flex items-center gap-1 text-xs text-gray-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>${msg.file_name}</div>` : ''}
+            </div>
+          `).join('');
+        }
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        list.innerHTML = `
+          <div class="text-center py-10 text-red-500">
+            <p>Failed to load messages</p>
+          </div>
+        `;
+      }
+    }
+
+    async function openMessageDetail(messageId) {
+      if (!currentUserId) return;
+
+      currentMessageId = messageId;
+
+      try {
+        const response = await fetch(`/messages/user/${currentUserId}`);
+
+        if (response.ok) {
+          const messages = await response.json();
+          const msg = messages.find(m => m.id === messageId);
+          
+          if (msg) {
+            document.getElementById('detailSubject').textContent = msg.subject || 'No Subject';
+            document.getElementById('detailFrom').textContent = msg.is_from_admin ? 'From: Admin' : 'From: You';
+            document.getElementById('detailTime').textContent = formatDate(msg.created_at);
+            document.getElementById('detailContent').textContent = msg.content;
+
+            if (msg.file_name && msg.file_path) {
+              document.getElementById('detailAttachment').classList.remove('hidden');
+              document.getElementById('detailFileLink').href = msg.file_path;
+              document.getElementById('detailFileName').textContent = msg.file_name;
+            } else {
+              document.getElementById('detailAttachment').classList.add('hidden');
+            }
+
+            document.getElementById('messageDetailModal').classList.remove('hidden');
+            document.getElementById('messageDetailModal').classList.add('flex');
+
+            // Mark as read
+            if (!msg.is_read && msg.is_from_admin) {
+              await fetch(`/messages/mark-read/${messageId}`, {
+                method: 'PUT'
+              });
+              loadUnreadCount();
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading message detail:', error);
+      }
+    }
+
+    function closeMessageDetail() {
+      document.getElementById('messageDetailModal').classList.add('hidden');
+      document.getElementById('messageDetailModal').classList.remove('flex');
+      currentMessageId = null;
+    }
+
+    function replyToMessage() {
+      closeMessageDetail();
+      switchMessageTab('new');
+      document.getElementById('msgSubject').value = 'Re: ' + (document.getElementById('detailSubject').textContent || '');
+      document.getElementById('msgContent').focus();
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      const now = new Date();
+      const diff = now - date;
+      
+      // For recent messages, show relative time with actual time
+      const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+      const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+      if (diff < 86400000) return `Today, ${timeStr}`;
+      if (diff < 172800000) return `Yesterday, ${timeStr}`;
+      
+      return `${dateStr}, ${timeStr}`;
+    }
+
+    function showToast(message, type = 'info') {
+      const existing = document.getElementById('toast-notification');
+      if (existing) existing.remove();
+
+      const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500'
+      };
+
+      const toast = document.createElement('div');
+      toast.id = 'toast-notification';
+      toast.className = `fixed bottom-5 right-5 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-[10001] animate-[fadeIn_0.3s_ease-out]`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Load unread count on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadUnreadCount();
+      // Refresh unread count every 30 seconds
+      setInterval(loadUnreadCount, 30000);
+    });
+
+    // Close modals on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeMessageModal();
+        closeMessageDetail();
+      }
+    });
+
+    // Close modals on overlay click
+    document.getElementById('messageModal').addEventListener('click', function(e) {
+      if (e.target === this) closeMessageModal();
+    });
+  </script>
+
+</body>
+</html>

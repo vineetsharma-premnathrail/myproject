@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!-- ========================================================================================
+     404 ERROR PAGE - Page Not Found
+     ================================================================================
+     Purpose: HTTP 404 Not Found error page for missing or invalid URLs
+     Framework: Static HTML with Tailwind CSS
+     Features: User-friendly error display, floating animation, dark mode toggle, navigation
+     Dependencies: Tailwind CSS (CDN), Google Fonts (Oswald, Roboto)
+     Error Type: Resource not found due to invalid URL or missing page
+     Accessibility: Clear error messaging, navigation options, semantic HTML
+     ================================================================================ -->
+<html lang="en">
+<!-- HTML root element with language set to English for accessibility and SEO -->
+
+<head>
+    <!-- ========================================================================================
+         DOCUMENT HEAD - Metadata and External Resources
+         ================================================================================
+         Contains: Character encoding, viewport settings, page title, CSS frameworks,
+         custom fonts, animations, and responsive design configuration
+         ================================================================================ -->
+    <meta charset="UTF-8">
+    <!-- Character encoding declaration - ensures proper display of special characters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Responsive viewport meta tag - enables mobile-friendly scaling and layout -->
+    <title>404 - Page Not Found | Premnath Engineering</title>
+    <!-- Page title displayed in browser tab and bookmarks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS framework loaded from CDN - provides utility-first CSS classes -->
+
+    <!-- ========================================================================================
+         GOOGLE FONTS - Typography Loading
+         ================================================================================
+         Loads: Oswald font family (weights 300-700) for headings, Roboto (weights 300-700) for body text
+         Purpose: Professional typography for error page readability
+         ================================================================================ -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- ========================================================================================
+         TAILWIND CONFIGURATION - Custom Theme Settings
+         ================================================================================
+         Configures: Dark mode support, custom font families, brand colors for consistency
+         Colors: Custom page background, surface colors, and brand blue
+         ================================================================================ -->
+    <script>
+        // Tailwind CSS configuration object for custom theme extensions
+        tailwind.config = {
+            darkMode: 'class', // Enables dark mode using CSS class toggling
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'], // Default sans-serif font for body text
+                        display: ['Oswald', 'sans-serif'], // Display font for headings and branding
+                    },
+                    colors: {
+                        page: '#f0f2f5', // Custom page background color
+                        surface: '#ffffff', // Surface color for cards and containers
+                        brand: '#1d4ed8', // Brand blue color for links and accents
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- ========================================================================================
+         CUSTOM CSS STYLES - 404 Page Animations
+         ================================================================================
+         Contains: Floating animation for visual appeal and user engagement
+         Features: Smooth floating motion for the main 404 graphic
+         ================================================================================ -->
+    <style>
+        /* ========================================================================================
+             FLOATING ANIMATION
+             ================================================================================
+             Purpose: Subtle floating animation for the 404 graphic
+             Features: Continuous up and down motion for visual interest
+             Timing: 3-second duration with ease-in-out for smooth motion
+             ================================================================================ */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); } /* Start and end at original position */
+            50% { transform: translateY(-20px); } /* Peak of float motion */
+        }
+        .float-animation {
+            animation: float 3s ease-in-out infinite; /* Continuous floating animation */
+        }
+    </style>
+</head>
+
+<body class="bg-page dark:bg-gray-900 min-h-screen flex flex-col">
+    <!-- ========================================================================================
+         MAIN BODY - 404 Error Page Layout
+         ================================================================================
+         Layout: Flex column layout with navbar and centered error content
+         Features: Dark mode support, minimum height for full viewport coverage
+         Purpose: User-friendly display of page not found error with navigation options
+         ================================================================================ -->
+
+    <!-- ========================================================================================
+         NAVIGATION BAR - Enhanced Header for Error Page
+         ================================================================================
+         Purpose: Provide navigation and theme toggle even on error pages
+         Features: Sticky positioning, dark mode toggle, logo navigation
+         Layout: Logo on left, theme toggle on right
+         ================================================================================ -->
+    <nav class="bg-surface dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-20 sticky top-0 z-50">
+        <!-- Sticky navigation bar with enhanced functionality -->
+        <div class="max-w-7xl mx-auto px-6 h-full flex justify-between items-center">
+            <!-- Centered container with logo and theme controls -->
+            <a href="/" class="flex items-center gap-3 group">
+                <img src="/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] bg-black text-white hidden items-center justify-center font-display font-bold text-xl rounded group-hover:bg-blue-700 transition shadow-sm">P</div>
+            </a>
+            <div class="flex items-center gap-4">
+                <button type="button" id="theme-toggle" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition">
+                    <svg id="sun-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg id="moon-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+                <div id="auth-section"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 404 Content -->
+    <main class="flex-1 flex items-center justify-center px-6 py-12">
+        <div class="text-center max-w-lg">
+            <!-- Large 404 Text -->
+            <div class="float-animation mb-8">
+                <span class="text-9xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">404</span>
+            </div>
+            
+            <!-- Error Message -->
+            <h1 class="text-3xl font-display font-bold text-gray-900 dark:text-white mb-4">
+                Page Not Found
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-8">
+                Oops! The page you're looking for doesn't exist or has been moved. 
+                Don't worry, you can find plenty of other things on our homepage.
+            </p>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/" class="inline-flex items-center justify-center gap-2 bg-brand hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition shadow-lg hover:shadow-xl">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Go Back Home
+                </a>
+                <button onclick="history.back()" class="inline-flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold px-8 py-4 rounded-lg transition">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Go Back
+                </button>
+            </div>
+            
+            <!-- Help Links -->
+            <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Need help? Check out these pages:</p>
+                <div class="flex flex-wrap justify-center gap-4 text-sm">
+                    <a href="/faq.html" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">FAQ</a>
+                    <span class="text-gray-300 dark:text-gray-600">•</span>
+                    <a href="/documentation.html" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Documentation</a>
+                    <span class="text-gray-300 dark:text-gray-600">•</span>
+                    <a href="/profile.html" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Contact Support</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6">
+        <div class="text-center text-xs text-gray-500 dark:text-gray-400">
+            © 2024 Premnath Engineering Works • All rights reserved
+        </div>
+    </footer>
+
+    <script>
+        // Theme initialization
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

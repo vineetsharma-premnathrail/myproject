@@ -1,0 +1,450 @@
+<!--
+===============================================
+FAQ Page - Frequently Asked Questions
+===============================================
+Engineering SaaS Platform - User Support Documentation
+
+Purpose:
+    Provides comprehensive user support documentation for the Engineering SaaS Platform.
+    Contains categorized frequently asked questions covering account management, license
+    activation, calculation tools usage, and technical support information.
+
+Architecture:
+    - Static HTML page served directly by FastAPI
+    - Responsive design using Tailwind CSS framework
+    - Dark mode support with localStorage persistence
+    - Interactive FAQ sections using HTML <details>/<summary> elements
+    - Contact support integration with backend messaging system
+
+Key Features:
+    - Categorized FAQ sections (Account, Tools, Support)
+    - Expandable/collapsible question-answer format
+    - Responsive design for mobile and desktop
+    - Dark/light theme support
+    - Direct links to related pages (Privacy, Terms, Documentation)
+    - Contact support functionality
+
+User Experience:
+    - Clean, professional interface matching platform branding
+    - Intuitive navigation with back-to-home functionality
+    - Search-friendly content structure
+    - Accessible design with proper ARIA attributes
+    - Fast loading with CDN-hosted assets
+
+Integration Points:
+    - Served from /assets/html/faq.html static route
+    - Links to other platform pages (/, /privacy-policy.html, etc.)
+    - Contact support connects to backend messaging system
+    - Theme persistence using browser localStorage
+
+Dependencies:
+    - Tailwind CSS (CDN): https://cdn.tailwindcss.com
+    - Google Fonts: Oswald (headings), Roboto (body text)
+    - Local assets: /assets/images/logo.png
+
+Browser Support:
+    - Modern browsers: Chrome, Firefox, Safari, Edge
+    - Progressive enhancement for older browsers
+    - Mobile-responsive design
+
+Maintenance:
+    - Update contact information as needed
+    - Add new FAQ categories for new features
+    - Review and update answers regularly
+    - Ensure links remain functional
+
+Last Updated: January 2026
+Version: 1.0.0
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- =========================================
+         HTML HEAD SECTION - Page Metadata & Assets
+         ========================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ | Premnath Engineering Works</title>
+
+    <!-- =========================================
+         STYLING ASSETS - Tailwind CSS & Fonts
+         ========================================= -->
+    <!-- Tailwind CSS Framework - Utility-first CSS framework for rapid UI development -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts - Typography for professional appearance -->
+    <!-- Oswald: Display font for headings and branding -->
+    <!-- Roboto: Clean sans-serif for body text and readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- =========================================
+         TAILWIND CONFIGURATION - Custom Theme Settings
+         ========================================= -->
+    <!-- Custom Tailwind configuration for consistent branding -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Enable class-based dark mode toggling
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],     // Body text font
+                        display: ['Oswald', 'sans-serif'],  // Heading/branding font
+                    },
+                    colors: {
+                        page: '#f0f2f5',     // Light background color
+                        surface: '#ffffff', // Card/surface background
+                        brand: '#1d4ed8',   // Primary brand color (blue)
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-page dark:bg-gray-900 min-h-screen flex flex-col">
+    <!-- =========================================
+         NAVIGATION BAR - Site Header & Navigation
+         ========================================= -->
+    <!-- Fixed-height navigation bar with logo and back navigation -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16">
+        <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+            <!-- Logo and Home Link -->
+            <!-- Responsive logo sizing: smaller on mobile, larger on desktop -->
+            <a href="/" class="flex items-center gap-3">
+                <img src="/assets/images/logo.png"
+                     alt="Premnath Engineering"
+                     class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <!-- Fallback text logo if image fails to load -->
+                <span class="hidden text-xl font-display font-bold text-brand">Premnath Engineering</span>
+            </a>
+
+            <!-- Back to Home Navigation -->
+            <!-- Provides easy return to main platform page -->
+            <a href="/" class="text-gray-600 hover:text-brand dark:text-gray-400 dark:hover:text-blue-400 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+            </a>
+        </div>
+    </nav>
+
+    <!-- =========================================
+         MAIN CONTENT AREA - FAQ Sections & Information
+         ========================================= -->
+    <!-- Flexible main content with vertical padding and centered layout -->
+    <main class="flex-1 py-12">
+        <div class="max-w-4xl mx-auto px-6">
+            <!-- Page Header Section -->
+            <!-- Centered title and description for clear page purpose -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-display font-bold text-gray-900 dark:text-white mb-4">
+                    Frequently Asked Questions
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Find answers to common questions about our engineering calculation tools
+                </p>
+            </div>
+
+            <!-- =========================================
+                 FAQ CATEGORIES - Organized Question Sections
+                 ========================================= -->
+            <!-- Vertical spacing between different FAQ categories -->
+            <div class="space-y-8">
+
+                <!-- =========================================
+                     ACCOUNT & LICENSE FAQ SECTION
+                     ========================================= -->
+                <!-- Card-style container with branded header for account-related questions -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    <!-- Category Header with Icon -->
+                    <!-- Blue brand color header with user icon indicating account focus -->
+                    <div class="bg-brand text-white px-6 py-4">
+                        <h2 class="text-xl font-display font-bold flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Account & License
+                        </h2>
+                    </div>
+
+                    <!-- FAQ Items Container -->
+                    <!-- Divided sections with hover effects for better UX -->
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- License Activation FAQ -->
+                        <!-- Covers the step-by-step process for activating software licenses -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">How do I activate my license?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                <ol class="list-decimal pl-5 space-y-2">
+                                    <li>Log in to your account</li>
+                                    <li>Go to your Profile page</li>
+                                    <li>Enter your license key in the "License Activation" section</li>
+                                    <li>Click "Activate License" button</li>
+                                </ol>
+                                <p class="mt-2">Your license will be activated immediately and you'll have access to all calculation tools.</p>
+                            </div>
+                        </details>
+
+                        <!-- Multi-Device License Usage FAQ -->
+                        <!-- Explains license portability and usage restrictions -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">Can I use one license on multiple devices?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                Yes, you can log in to your account from any device. The license is tied to your account, not your device. However, sharing your account credentials with others is not permitted.
+                            </div>
+                        </details>
+                        <!-- License Expiration FAQ -->
+                        <!-- Explains consequences of expired licenses and data retention -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">What happens when my license expires?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                When your license expires, you'll still be able to access your account and view your saved calculation history. However, you won't be able to perform new calculations until you renew your license.
+                            </div>
+                        </details>
+                        <!-- Password Reset FAQ -->
+                        <!-- Provides instructions for account recovery and password management -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">How do I reset my password?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                Click on "Forgot Password" on the login page, enter your registered email address, and follow the instructions sent to your email to reset your password.
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- =========================================
+                     CALCULATION TOOLS FAQ SECTION
+                     ========================================= -->
+                <!-- Card-style container with green header for tool-related questions -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    <!-- Category Header with Calculator Icon -->
+                    <!-- Green color header with calculator icon indicating engineering tools focus -->
+                    <div class="bg-green-600 text-white px-6 py-4">
+                        <h2 class="text-xl font-display font-bold flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            Calculation Tools
+                        </h2>
+                    </div>
+
+                    <!-- FAQ Items Container -->
+                    <!-- Divided sections with hover effects for better UX -->
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Engineering Standards FAQ -->
+                        <!-- Explains the technical standards and compliance used in calculations -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">What standards do the calculations follow?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                Our calculations are based on various international standards including DIN EN 15746-2:2021-05 for braking performance, and other relevant engineering standards. Please refer to each tool's documentation for specific standards used.
+                            </div>
+                        </details>
+                        <!-- Report Export FAQ -->
+                        <!-- Explains how to export and download calculation results -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">Can I download calculation reports?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                Yes! After completing a calculation, you can export the results as a professional report document. Click the "Export" or "Save Document" button to download your report.
+                            </div>
+                        </details>
+                        <!-- Calculation History FAQ -->
+                        <!-- Explains automatic saving and history management features -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">Is my calculation history saved automatically?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                Yes, all your calculations are automatically saved to your history. You can access them anytime by clicking the "History" button in any calculator. You can also give custom names to your calculations for easy reference.
+                            </div>
+                        </details>
+
+                        <!-- Calculation Accuracy FAQ -->
+                        <!-- Explains calculation reliability and professional verification requirements -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">How accurate are the calculations?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                Our calculations follow industry-standard formulas and methodologies. However, all results should be verified by a qualified engineer before use in actual applications. Please read our <a href="/disclaimer.html" class="text-brand hover:underline">Disclaimer</a> for important information.
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- =========================================
+                     TECHNICAL SUPPORT FAQ SECTION
+                     ========================================= -->
+                <!-- Card-style container with purple header for support-related questions -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    <!-- Category Header with Support Icon -->
+                    <!-- Purple color header with help/support icon indicating technical assistance focus -->
+                    <div class="bg-purple-600 text-white px-6 py-4">
+                        <h2 class="text-xl font-display font-bold flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            Technical Support
+                        </h2>
+                    </div>
+
+                    <!-- FAQ Items Container -->
+                    <!-- Divided sections with hover effects for better UX -->
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Troubleshooting FAQ -->
+                        <!-- Provides guidance for resolving calculation tool issues -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">The calculation is not working. What should I do?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                <ul class="list-disc pl-5 space-y-2">
+                                    <li>Ensure all required input fields are filled correctly</li>
+                                    <li>Check that your license is active</li>
+                                    <li>Try refreshing the page</li>
+                                    <li>Clear your browser cache</li>
+                                    <li>If the issue persists, contact support with the error message</li>
+                                </ul>
+                            </div>
+                        </details>
+                        <!-- Browser Compatibility FAQ -->
+                        <!-- Lists supported browsers and version requirements -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">Which browsers are supported?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                Our platform works best with modern browsers: Google Chrome (recommended), Mozilla Firefox, Microsoft Edge, and Safari. Please ensure your browser is updated to the latest version for the best experience.
+                            </div>
+                        </details>
+
+                        <!-- Contact Support FAQ -->
+                        <!-- Provides multiple channels for getting technical assistance -->
+                        <details class="group">
+                            <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center">
+                                <span class="font-medium text-gray-900 dark:text-white">How do I contact support?</span>
+                                <svg class="w-5 h-5 text-gray-500 transform group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </summary>
+                            <div class="px-6 pb-4 text-gray-600 dark:text-gray-400">
+                                You can contact our support team through:
+                                <ul class="list-disc pl-5 mt-2 space-y-1">
+                                    <li>Email: support@premnathengineering.com</li>
+                                    <li>Message feature in your Profile page (when logged in)</li>
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========================================
+                 STILL HAVE QUESTIONS CALL-TO-ACTION
+                 ========================================= -->
+            <!-- Prominent CTA section for users who need additional support -->
+            <div class="mt-12 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+                <h3 class="text-xl font-display font-bold text-gray-900 dark:text-white mb-4">Still have questions?</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">
+                    Can't find what you're looking for? Our support team is here to help.
+                </p>
+                <!-- Support Contact Button -->
+                <!-- Interactive button that reveals contact information -->
+                <button onclick="showSupportMessage()" class="inline-flex items-center justify-center gap-2 bg-brand hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition shadow-lg hover:shadow-xl">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    Contact Support
+                </button>
+                <!-- Hidden Support Message -->
+                <!-- JavaScript-revealed contact information with email address -->
+                <div id="support-message" style="display:none;" class="mt-4 p-4 bg-green-100 text-green-800 rounded shadow">
+                    Thank you for reaching out! Please email <b>support@premnathengineering.com</b> with your query.<br>
+                    Your request will be sent to the admin for further assistance.
+                </div>
+                <!-- Support Message Toggle Script -->
+                <!-- Simple vanilla JavaScript for showing contact information -->
+                <script>
+                    function showSupportMessage() {
+                        document.getElementById('support-message').style.display = 'block';
+                    }
+                </script>
+            </div>
+        </div>
+    </main>
+
+    <!-- =========================================
+         SITE FOOTER - Global Navigation & Copyright
+         ========================================= -->
+    <!-- Consistent footer across all pages with legal links and branding -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto py-8">
+        <div class="px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <!-- Copyright Notice -->
+            <!-- Company branding and legal copyright information -->
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+            <!-- Footer Navigation Links -->
+            <!-- Essential legal and informational page links -->
+            <nav class="flex flex-wrap gap-4 mt-2">
+                <a href="/privacy-policy.html" class="text-xs text-blue-600 hover:underline">Privacy Policy</a>
+                <a href="/terms.html" class="text-xs text-blue-600 hover:underline">Terms</a>
+                <a href="/faq.html" class="text-xs text-blue-600 hover:underline">FAQ</a>
+                <a href="/documentation.html" class="text-xs text-blue-600 hover:underline">Documentation</a>
+                <a href="/disclaimer.html" class="text-xs text-blue-600 hover:underline">Disclaimer</a>
+            </nav>
+        </div>
+    </footer>
+
+    <!-- =========================================
+         THEME PERSISTENCE SCRIPT
+         ========================================= -->
+    <!-- Loads user's preferred theme (light/dark) from localStorage on page load -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

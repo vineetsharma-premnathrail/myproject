@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Load Distribution Calculation System</title>
+  
+  <!-- SECURITY GATEKEEPER - Runs before page content loads -->
+  <script>
+    (function() {
+      const token = localStorage.getItem("token");
+      const isLicenseActive = localStorage.getItem("is_license_active");
+      const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+      const isManager = sessionStorage.getItem('isManager') === 'true';
+      const isUserManager = sessionStorage.getItem('isUserManager') === 'true';
+      
+      if (!token && !isAdmin && !isManager) {
+        window.location.replace("/login.html");
+      } else if (isLicenseActive !== "true" && !isAdmin && !isManager && !isUserManager) {
+        window.location.replace("/profile.html");
+      }
+    })();
+  </script>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Roboto', 'sans-serif'],
+            display: ['Oswald', 'sans-serif'],
+          },
+          colors: {
+            // Industrial Grays
+            page: '#f0f2f5', 
+            surface: '#ffffff',
+            dark: '#212529',
+            brand: '#1d4ed8',
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Watermark Number Effect */
+    .watermark-text::before {
+        content: attr(data-index);
+        position: absolute;
+        top: -15px;
+        right: 10px;
+        font-family: 'Oswald', sans-serif;
+        font-size: 6rem;
+        font-weight: 700;
+        color: #f3f4f6;
+        z-index: -1;
+        transition: all 0.3s;
+        opacity: 0.6;
+    }
+    .group:hover .watermark-text::before {
+        transform: translateY(5px);
+        color: #e9ecef;
+    }
+
+    /* Match hydraulic calculator input styles */
+    .input-field {
+      background-color: #f9fafb;
+      border: 1px solid #d1d5db;
+      color: #111827;
+      font-size: 0.875rem;
+      border-radius: 0.375rem;
+      padding: 0.5rem;
+      width: 100%;
+      transition: all 0.2s;
+    }
+    .dark .input-field {
+      background-color: #374151;
+      border-color: #4b5563;
+      color: #f9fafb;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.06);
+    }
+    .input-field:disabled {
+      background-color: #e5e7eb;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .dark .input-field:disabled {
+      background-color: #1f2937;
+      color: #6b7280;
+    }
+    
+    /* Toast Notifications */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 14px 20px; border-radius: 8px; color: white; font-weight: 500; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 350px; }
+    .toast.success { background: linear-gradient(135deg, #10b981, #059669); }
+    .toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .toast.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+  </style>
+
+  <script>
+    // --- AUTH LOGIC ---
+    const DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz4KPHBhdGggZD0iTTE2IDE2QzE4LjIwOTEgMTYgMjAgMTQuMjA5MSAyMCAxMkMxOCA3Ljc5MDkgMTYgMTYuMDAwMSAxNi4wMDAxQzEzLjc5MDkgMTYuMDAwMSAxMiAxOC4yMDkxIDEyIDIwQzEyIDIyLjIwOTEgMTMuNzkgMjQgMTYgMjRaIiBmaWxsPSIjRkZGRkZGRiIvPgo8L3N2Zz4K";
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // Dark mode initialization
+      const theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('sun-icon').classList.add('hidden');
+        document.getElementById('moon-icon').classList.remove('hidden');
+      }
+
+      // Theme toggle
+      document.getElementById('theme-toggle').addEventListener('click', function() {
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        
+        if (html.classList.contains('dark')) {
+          html.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+          sunIcon.classList.remove('hidden');
+          moonIcon.classList.add('hidden');
+        } else {
+          html.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+        }
+      });
+
+      const token = localStorage.getItem("token");
+      const authSection = document.getElementById("auth-section");
+      
+      // Check if Admin or Manager is logged in
+      const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+      const isManager = sessionStorage.getItem('isManager') === 'true';
+
+      if (isAdmin) {
+        // Admin special navbar
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <a href="/admin.html" class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold transition shadow-lg">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                Admin Panel
+             </a>
+             <div class="flex items-center gap-2 px-3 py-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                <span class="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase">GOLD LICENSE</span>
+             </div>
+          </div>
+        `;
+      } else if (isManager) {
+        // Manager special navbar
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <a href="/manager.html" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition shadow-lg">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                Manager Panel
+             </a>
+             <div class="flex items-center gap-2 px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase">SILVER LICENSE</span>
+             </div>
+          </div>
+        `;
+      } else if (token) {
+        checkUserManagerAndSetNavbar(authSection);
+      } else {
+        authSection.innerHTML = `
+          <div class="flex items-center gap-3">
+             <a href="/login.html" class="font-display font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white uppercase tracking-wide transition text-sm">Log In</a>
+             <a href="/signup.html" class="font-display bg-black dark:bg-gray-700 text-white px-6 py-2.5 uppercase tracking-wide text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition shadow-lg rounded-sm">Sign Up</a>
+          </div>
+        `;
+      }
+    });
+
+    async function loadProfilePhoto() {
+      const userId = parseInt(localStorage.getItem("user_id"));
+      if (!userId || isNaN(userId)) return;
+      try {
+        const res = await fetch(`/auth/profile?user_id=${userId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+        });
+        if (res.ok) {
+           const data = await res.json();
+           if(data.profile_photo_path) {
+              const timestamp = new Date().getTime();
+              document.getElementById('profileIcon').src = data.profile_photo_path + '?t=' + timestamp;
+           }
+        }
+      } catch (err) {}
+    }
+    
+    async function checkUserManagerAndSetNavbar(authSection) {
+      const userId = parseInt(localStorage.getItem("user_id"));
+      if (!userId || isNaN(userId)) return;
+      try {
+        const res = await fetch(`/auth/profile?user_id=${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.is_manager) {
+            sessionStorage.setItem('isUserManager', 'true');
+            authSection.innerHTML = `
+              <div class="flex items-center gap-4">
+                 <a href="/manager.html" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition shadow-lg">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                    Manager Panel
+                 </a>
+                 <div class="flex items-center gap-2 px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                    <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase">SILVER LICENSE</span>
+                 </div>
+              </div>
+            `;
+          } else {
+            authSection.innerHTML = `
+              <div class="flex items-center gap-4">
+                 <div class="text-right hidden sm:block">
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Operator</div>
+                    <div class="text-sm font-bold text-gray-900 dark:text-gray-100 font-display uppercase tracking-wide">Engineer</div>
+                 </div>
+                 <img id="profileIcon" src="${DEFAULT_AVATAR}" class="w-10 h-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:border-black dark:hover:border-white transition" onclick="window.location.href='/profile.html'">
+                 <button onclick="logout()" class="ml-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition p-2 border-l border-gray-200 dark:border-gray-600 pl-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                 </button>
+              </div>
+            `;
+            loadProfilePhoto();
+          }
+        }
+      } catch (err) {
+        authSection.innerHTML = `
+          <div class="flex items-center gap-4">
+             <div class="text-right hidden sm:block">
+                <div class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Operator</div>
+                <div class="text-sm font-bold text-gray-900 dark:text-gray-100 font-display uppercase tracking-wide">Engineer</div>
+             </div>
+             <img id="profileIcon" src="${DEFAULT_AVATAR}" class="w-10 h-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:border-black dark:hover:border-white transition" onclick="window.location.href='/profile.html'">
+             <button onclick="logout()" class="ml-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition p-2 border-l border-gray-200 dark:border-gray-600 pl-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+             </button>
+          </div>
+        `;
+        loadProfilePhoto();
+      }
+    }
+
+    function logout() {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = "/login.html";
+    }
+
+    function checkAccess(event, url) {
+      event.preventDefault();
+      
+      const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+      const isManager = sessionStorage.getItem('isManager') === 'true';
+      const isUserManager = sessionStorage.getItem('isUserManager') === 'true';
+      
+      if (isAdmin || isManager || isUserManager) {
+          console.log('Admin/Manager/User-Manager access - Full access granted');
+          window.location.href = url;
+          return;
+      }
+      
+      const token = localStorage.getItem("token");
+      const isLicenseActive = localStorage.getItem("is_license_active") === "true";
+
+      if (!token) {
+        window.location.href = "/login.html";
+        return;
+      }
+      if (!isLicenseActive) {
+        window.location.href = "/profile.html";
+        return;
+      }
+      window.location.href = url;
+    }
+  </script>
+</head>
+
+<body class="bg-page dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans border-t-4 border-brand flex flex-col min-h-screen">
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- NAVBAR -->
+  <nav class="bg-surface dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-20 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 h-full flex justify-between items-center">
+        <a href="/" class="flex items-center gap-3 group">
+            <img src="/app/assets/images/logo.png" alt="Premnath Engineering" class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] rounded group-hover:scale-105 transition shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="w-[150px] md:w-[200px] h-[34px] md:h-[45px] bg-black text-white hidden items-center justify-center font-display font-bold text-xl rounded group-hover:bg-blue-700 transition shadow-sm">P</div>
+        </a>
+        
+        <div class="flex items-center gap-4">
+             <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition">
+                <svg id="sun-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="moon-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+            
+            <div id="auth-section"></div>
+        </div>
+    </div>
+  </nav>
+  <!-- INDUSTRIAL HEADER -->
+  <div class="bg-surface dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div class="px-6 py-10 max-w-7xl mx-auto">
+          <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                  <h2 class="font-display text-3xl md:text-4xl font-medium text-gray-900 dark:text-gray-100 tracking-tight uppercase">Load Distribution Calculator</h2>
+                </div>
+              <div class="flex gap-2 mt-4 md:mt-0">
+                  <a href="/" class="text-sm font-semibold text-gray-500 hover:text-black dark:hover:text-white transition">Dashboard</a>
+                  <span class="text-gray-300">/</span>
+                  <span class="text-sm font-semibold text-brand">Load Distribution</span>
+              </div>
+          </div>
+      </div>
+  </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-grow py-8 px-4 md:px-6">
+    <div class="max-w-7xl mx-auto relative">
+
+        <div class="watermark-text" data-index="03"></div>
+
+        <div class="bg-surface dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative z-10">
+
+            <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span class="font-display font-semibold uppercase text-gray-700 dark:text-gray-200">Configuration Mode</span>
+                </div>
+                <div class="flex gap-6">
+                    <label class="flex items-center cursor-pointer gap-2">
+                        <input type="radio" name="config" value="Bogie" checked class="accent-brand w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Bogie Configuration</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer gap-2">
+                        <input type="radio" name="config" value="Axle" class="accent-brand w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Axle Configuration</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <div class="space-y-6">
+                    <div class="border-l-4 border-green-600 pl-4">
+                        <h3 class="font-display text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wide">Vehicle & Load Data</h3>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Total Load (Ton)</label><input class="input-field" id="total_load" value="28.0" /></div>
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Front Load (%)</label><input class="input-field" id="front_percent" value="50.0" /></div>
+                            <div><label class="text-xs font-bold text-brand mb-1 block">Q1 (% of Front)</label><input class="input-field border-brand/50 bg-blue-50/50 dark:bg-blue-900/10" id="q1_percent" value="50.0" /></div>
+                            <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">Q3 (% of Rear)</label><input class="input-field" id="q3_percent" value="50.0" /></div>
+                        </div>
+                    </div>
+
+                    <div class="border-l-4 border-blue-500 pl-4 pt-2">
+                        <h3 class="font-display text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wide">Vehicle Diagram</h3>
+                        <div class="flex justify-center bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <img src="/assets/images/Diagram.png" alt="Vehicle Diagram" class="max-w-full h-auto rounded object-contain max-h-48" onerror="this.alt='Diagram.png not found in root folder'; this.src='https://placehold.co/300x200/cccccc/777777?text=Diagram.png+Not+Found';">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="border-l-4 border-orange-500 pl-4">
+                        <h3 class="font-display text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wide">Load Distribution Results</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                                <div class="text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">Front/Rear Load</div>
+                                <div id="res_front_rear_load" class="text-lg font-bold text-blue-900 dark:text-blue-100">-</div>
+                            </div>
+                            <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+                                <div class="text-xs font-bold text-green-700 dark:text-green-300 mb-1">Q1 / Q2</div>
+                                <div id="res_q1_q2" class="text-lg font-bold text-green-900 dark:text-green-100">-</div>
+                            </div>
+                            <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded border border-purple-200 dark:border-purple-800">
+                                <div class="text-xs font-bold text-purple-700 dark:text-purple-300 mb-1">Q3 / Q4</div>
+                                <div id="res_q3_q4" class="text-lg font-bold text-purple-900 dark:text-purple-100">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-l-4 border-purple-600 pl-4 pt-2">
+                        <h3 class="font-display text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wide">Safety Analysis</h3>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div class="p-2 bg-gray-50 dark:bg-gray-800 rounded border">
+                                <div class="text-xs font-bold text-gray-600 dark:text-gray-400">Lowest Q (QL)</div>
+                                <div id="res_ql" class="font-mono font-bold">-</div>
+                            </div>
+                            <div class="p-2 bg-gray-50 dark:bg-gray-800 rounded border">
+                                <div class="text-xs font-bold text-gray-600 dark:text-gray-400">Q (Avg Heavier)</div>
+                                <div id="res_q" class="font-mono font-bold">-</div>
+                            </div>
+                            <div class="p-2 bg-gray-50 dark:bg-gray-800 rounded border">
+                                <div class="text-xs font-bold text-gray-600 dark:text-gray-400">ΔQ (Q - QL)</div>
+                                <div id="res_delta_q" class="font-mono font-bold">-</div>
+                            </div>
+                            <div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                                <div class="text-xs font-bold text-yellow-700 dark:text-yellow-300">ΔQ/Q Ratio</div>
+                                <div id="res_delta_q_ratio" class="font-mono font-bold text-yellow-800 dark:text-yellow-200">-</div>
+                            </div>
+                            <div class="col-span-2 p-2 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+                                <div class="text-xs font-bold text-red-700 dark:text-red-300 mb-1">Safety Limit</div>
+                                <div id="res_limit" class="font-mono font-bold text-red-800 dark:text-red-200">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col h-full">
+                    <div class="space-y-3 mb-6">
+                        <button id="calculateBtn" class="w-full bg-brand hover:bg-blue-800 text-white font-display font-semibold py-4 rounded shadow-lg hover:shadow-xl transition-all uppercase tracking-wider flex items-center justify-center gap-2">
+                            <span>Execute Calculation</span>
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                        <button id="saveDocBtn" class="w-full bg-white dark:bg-gray-700 border-2 border-green-600 text-green-700 dark:text-green-500 hover:bg-green-50 dark:hover:bg-gray-600 font-display font-semibold py-3 rounded transition-all uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                            Export Report (.docx)
+                        </button>
+                        <button id="historyBtn" onclick="openHistoryModal()" class="w-full bg-white dark:bg-gray-700 border-2 border-purple-600 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-gray-600 font-display font-semibold py-3 rounded transition-all uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            History
+                        </button>
+                    </div>
+
+                    <div class="flex-grow">
+                        <div class="border-l-4 border-gray-600 pl-4 mb-4">
+                            <h3 class="font-display text-lg font-medium text-gray-900 dark:text-gray-100 uppercase tracking-wide">Status</h3>
+                            <div id="status_label" class="text-lg font-bold text-gray-500 mt-2">STATUS</div>
+                            <div id="status_detail_label" class="text-sm text-gray-500 italic">Enter inputs and click 'Calculate' to see results.</div>
+                        </div>
+
+                        <div class="flex-grow bg-black rounded-lg border border-gray-800 p-4 font-mono text-sm shadow-inner relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-full h-6 bg-gray-900 border-b border-gray-800 flex items-center px-2 gap-1">
+                                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                <span class="ml-2 text-[10px] text-gray-500">load_distribution_log.txt</span>
+                            </div>
+                            <pre id="resultsBox" class="mt-4 text-green-400 h-[300px] overflow-auto whitespace-pre-wrap leading-relaxed pb-4">
+> System Ready.
+> Waiting for input parameters...
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+  </main>
+
+  <!-- Save Calculation Name Modal -->
+  <div id="saveNameModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-xl font-display font-bold text-gray-900 dark:text-gray-100">Save Calculation</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Give your calculation a name for easy reference</p>
+      </div>
+      <div class="p-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Calculation Name</label>
+        <input type="text" id="calculationNameInput" class="input-field" placeholder="e.g., EN-20 Load Distribution" maxlength="100">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Leave empty for auto-generated name</p>
+      </div>
+      <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+        <button onclick="skipSaveName()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+          Skip
+        </button>
+        <button onclick="confirmSaveName()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div id="historyModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-gray-200 dark:border-gray-700">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <div>
+          <h3 class="text-xl font-display font-bold text-gray-900 dark:text-gray-100">Calculation History</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Click on any calculation to load it</p>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-2">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div id="historyList" class="flex-1 overflow-y-auto p-4 space-y-2">
+        <div class="text-center text-gray-500 py-8">Loading history...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename History Item Modal -->
+  <div id="renameHistoryModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700">
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <h3 class="text-xl font-display font-bold text-gray-900 dark:text-gray-100">Rename Calculation</h3>
+        <button onclick="closeRenameHistoryModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-2">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Name</label>
+        <input type="text" id="renameHistoryInput" placeholder="Enter new name (e.g., EN-20 Project)"
+               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition">
+        <input type="hidden" id="renameHistoryId">
+        <div class="flex gap-3 mt-6">
+          <button onclick="submitRenameHistory()" class="flex-1 px-4 py-3 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition">
+            Save Name
+          </button>
+          <button onclick="closeRenameHistoryModal()" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let lastInputData = null;
+    
+    // API URL Blank for automatic detection (Render friendly)
+    const API_BASE_URL = window.location.origin; 
+
+    // --- DOM Elements ---
+    const statusLabel = document.getElementById('status_label');
+    const statusDetailLabel = document.getElementById('status_detail_label');
+    const resultsBox = document.getElementById('resultsBox');
+    
+    // Result value spans
+    const res = {
+        front_rear_load: document.getElementById('res_front_rear_load'),
+        q1_q2: document.getElementById('res_q1_q2'),
+        q3_q4: document.getElementById('res_q3_q4'),
+        ql: document.getElementById('res_ql'),
+        q: document.getElementById('res_q'),
+        delta_q: document.getElementById('res_delta_q'),
+        delta_q_ratio: document.getElementById('res_delta_q_ratio'),
+        limit: document.getElementById('res_limit')
+    };
+
+    // --- TOAST FUNCTION ---
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+      toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+    
+    // Input elements
+    const totalLoadInput = document.getElementById('total_load');
+    // Attach listeners to config radios (name="config") instead of a non-existent id
+    const configRadios = document.querySelectorAll('input[name="config"]');
+    configRadios.forEach(r => r.addEventListener('change', updateTotalLoadDefault));
+    // Ensure correct default on initial load
+    updateTotalLoadDefault();
+
+    // --- Function to collect input data ---
+    function collectRawData() {
+        return {
+            config_type: document.querySelector('input[name="config"]:checked').value,
+            total_load: document.getElementById('total_load').value,
+            front_percent: document.getElementById('front_percent').value,
+            q1_percent: document.getElementById('q1_percent').value,
+            q3_percent: document.getElementById('q3_percent').value
+        };
+    }
+
+    // --- Update default total load based on config ---
+    function updateTotalLoadDefault() {
+      const config = document.querySelector('input[name="config"]:checked').value;
+      const defaults = {"Bogie": "28.0", "Axle": "19.0"};
+      // Always set default when config changes
+      document.getElementById('total_load').value = defaults[config];
+    }
+
+    // --- API Call Function ---
+    async function handleCalculateClick() {
+      const calculateBtn = document.getElementById("calculateBtn");
+      resultsBox.textContent = "Calculating... (Connecting to API)";
+      statusLabel.textContent = "Calculating...";
+      statusLabel.className = "text-2xl font-bold text-gray-500 mb-1";
+      statusDetailLabel.textContent = "Please wait...";
+      calculateBtn.disabled = true;
+      
+      const rawData = collectRawData();
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/calculate_load_distribution`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rawData),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || "Unknown error");
+        }
+
+        // Update detailed steps
+        resultsBox.textContent = data.report;
+        
+        // Update summary
+        const results = data.results; 
+        
+        if (results.status === 'success') {
+            statusLabel.textContent = "✔ PASS";
+            statusLabel.className = "text-2xl font-bold text-green-600 mb-1";
+            statusDetailLabel.className = "text-lg text-green-600 mb-4";
+        } else {
+            statusLabel.textContent = "✖ FAIL";
+            statusLabel.className = "text-2xl font-bold text-red-600 mb-1";
+            statusDetailLabel.className = "text-lg text-red-600 mb-4";
+        }
+        statusDetailLabel.textContent = results.status_msg;
+
+        res.front_rear_load.textContent = `${results.front_load.toFixed(2)} Ton / ${results.rear_load.toFixed(2)} Ton`;
+        res.q1_q2.textContent = `${results.q_values.Q1.toFixed(2)} Ton / ${results.q_values.Q2.toFixed(2)} Ton`;
+        res.q3_q4.textContent = `${results.q_values.Q3.toFixed(2)} Ton / ${results.q_values.Q4.toFixed(2)} Ton`;
+        res.ql.textContent = `${results.ql_name} = ${results.ql_value.toFixed(2)} Ton`;
+        res.q.textContent = `${results.q_value.toFixed(2)} Ton (${results.q_formula_str})`;
+        res.delta_q.textContent = `${results.delta_q.toFixed(2)} Ton`;
+        res.delta_q_ratio.textContent = `${(results.delta_q_by_q * 100).toFixed(2)}%`;
+        res.limit.textContent = `${(results.limit * 100).toFixed(0)}%`;
+
+        lastInputData = rawData;
+
+        // Prompt user for calculation name before saving
+        promptSaveCalculation(rawData, data);
+      } catch (error) {
+        console.error("Fetch Error:", error);
+        const errorMsg = `--- ERROR ---\n${error.message}\n\nIs the FastAPI server running?`;
+        resultsBox.textContent = errorMsg;
+        statusLabel.textContent = "ERROR";
+        statusLabel.className = "text-2xl font-bold text-red-600 mb-1";
+        statusDetailLabel.textContent = error.message;
+        statusDetailLabel.className = "text-lg text-red-600 mb-4";
+        lastInputData = null;
+      } finally {
+          calculateBtn.disabled = false;
+      }
+    }
+
+    // --- .docx download function ---
+    async function handleSaveDocumentClick() {
+        const saveDocBtn = document.getElementById("saveDocBtn");
+        
+        if (!lastInputData) {
+            resultsBox.textContent = "--- ERROR ---\nFirst, generate a successful report by clicking 'CALCULATE' button.";
+            return;
+        }
+        
+        saveDocBtn.textContent = "Generating...";
+        saveDocBtn.disabled = true;
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/download_load_distribution_report`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(lastInputData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || "Failed to download file");
+            }
+
+            const blob = await response.blob();
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = "Load_Distribution_Report.docx"; // Default
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (filenameMatch && filenameMatch.length > 1) {
+                    filename = filenameMatch[1];
+                }
+            }
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } catch (error) {
+            console.error("Download Error:", error);
+            resultsBox.textContent = `--- DOCUMENT DOWNLOAD ERROR ---\n${error.message}`;
+        } finally {
+            saveDocBtn.textContent = "💾 SAVE DOCUMENT";
+            saveDocBtn.disabled = false;
+        }
+    }
+
+    // --- Add event listeners ---
+    document.getElementById("calculateBtn").addEventListener("click", handleCalculateClick);
+    document.getElementById("saveDocBtn").addEventListener("click", handleSaveDocumentClick);
+
+    // --- HISTORY FUNCTIONS ---
+    const TOOL_NAME = 'load_distribution';
+    let pendingInputs = null;
+    let pendingResults = null;
+
+    async function saveCalculationToHistory(inputs, results, calcName = null) {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) return;
+
+      try {
+        const payload = {
+          user_id: parseInt(userId),
+          tool_name: TOOL_NAME,
+          inputs: inputs,
+          results: results
+        };
+        if (calcName) {
+          payload.calculation_name = calcName;
+        }
+        await fetch(`${API_BASE_URL}/history/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.error('Failed to save history:', err);
+      }
+    }
+
+    function promptSaveCalculation(inputs, results) {
+      pendingInputs = inputs;
+      pendingResults = results;
+      document.getElementById('calculationNameInput').value = '';
+      document.getElementById('saveNameModal').classList.remove('hidden');
+    }
+
+    function skipSaveName() {
+      document.getElementById('saveNameModal').classList.add('hidden');
+      if (pendingInputs && pendingResults) {
+        saveCalculationToHistory(pendingInputs, pendingResults);
+        showToast('Calculation saved to history', 'success');
+      }
+      pendingInputs = null;
+      pendingResults = null;
+    }
+
+    function confirmSaveName() {
+      const name = document.getElementById('calculationNameInput').value.trim();
+      document.getElementById('saveNameModal').classList.add('hidden');
+      if (pendingInputs && pendingResults) {
+        saveCalculationToHistory(pendingInputs, pendingResults, name || null);
+        showToast(name ? `Saved as "${name}"` : 'Calculation saved to history', 'success');
+      }
+      pendingInputs = null;
+      pendingResults = null;
+    }
+
+    async function openHistoryModal() {
+      document.getElementById('historyModal').classList.remove('hidden');
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '<div class="text-center text-gray-500 py-8">Loading history...</div>';
+
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        historyList.innerHTML = '<div class="text-center text-red-500 py-8">Please login to view history</div>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/history/list?user_id=${userId}&tool_name=${TOOL_NAME}`);
+        const data = await res.json();
+
+        if (data.length === 0) {
+          historyList.innerHTML = '<div class="text-center text-gray-500 py-8">No calculations saved yet</div>';
+          return;
+        }
+
+        historyList.innerHTML = data.map(item => {
+          const inp = item.inputs || {};
+          const preview = `Total Weight: ${inp.total_weight || '-'} kg | Wheelbase: ${inp.wheelbase || '-'} mm | CG Height: ${inp.cg_height || '-'} mm`;
+          const escapedName = (item.calculation_name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          return `
+          <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition border border-gray-200 dark:border-gray-600 hover:border-purple-400">
+            <div class="flex justify-between items-center">
+              <div class="flex-1 cursor-pointer" onclick="loadCalculation(${item.id})">
+                <h4 class="font-semibold text-gray-900 dark:text-gray-100">${item.calculation_name}</h4>
+                <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">${preview}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${item.created_at}</p>
+              </div>
+              <div class="flex items-center gap-2 ml-2">
+                <button onclick="event.stopPropagation(); openRenameHistoryModal(${item.id}, '${escapedName}')" class="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition" title="Rename">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </button>
+                <svg class="w-5 h-5 text-purple-600 cursor-pointer" onclick="loadCalculation(${item.id})" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              </div>
+            </div>
+          </div>
+        `}).join('');
+
+      } catch (err) {
+        historyList.innerHTML = '<div class="text-center text-red-500 py-8">Failed to load history</div>';
+      }
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.add('hidden');
+    }
+
+        // Rename history item functions
+        function openRenameHistoryModal(calcId, currentName) {
+            document.getElementById('renameHistoryId').value = calcId;
+            document.getElementById('renameHistoryInput').value = currentName;
+            document.getElementById('renameHistoryModal').classList.remove('hidden');
+            document.getElementById('renameHistoryInput').focus();
+            document.getElementById('renameHistoryInput').select();
+        }
+
+        function closeRenameHistoryModal() {
+            document.getElementById('renameHistoryModal').classList.add('hidden');
+            document.getElementById('renameHistoryId').value = '';
+            document.getElementById('renameHistoryInput').value = '';
+        }
+
+        async function submitRenameHistory() {
+            const calcId = document.getElementById('renameHistoryId').value;
+            const newName = document.getElementById('renameHistoryInput').value.trim();
+
+            if (!newName) {
+                showToast('Please enter a name', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/history/rename/${calcId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ calculation_name: newName })
+                });
+
+                if (res.ok) {
+                    showToast('Calculation renamed successfully!', 'success');
+                    closeRenameHistoryModal();
+                    openHistoryModal();
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || 'Failed to rename', 'error');
+                }
+            } catch (err) {
+                console.error('Rename error:', err);
+                showToast('Failed to rename calculation', 'error');
+            }
+        }
+
+    async function loadCalculation(calcId) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/history/detail/${calcId}`);
+        const data = await res.json();
+
+        // Fill form with saved inputs
+        const inputs = data.inputs;
+        if (inputs.config_type) {
+          document.querySelector(`input[name="config"][value="${inputs.config_type}"]`).checked = true;
+        }
+        if (inputs.total_load) document.getElementById('total_load').value = inputs.total_load;
+        if (inputs.front_percent) document.getElementById('front_percent').value = inputs.front_percent;
+        if (inputs.q1_percent) document.getElementById('q1_percent').value = inputs.q1_percent;
+        if (inputs.q3_percent) document.getElementById('q3_percent').value = inputs.q3_percent;
+
+        // Show saved results
+        if (data.results) {
+          resultsBox.textContent = data.results.report || '';
+          const results = data.results.results;
+          if (results) {
+            if (results.status === 'success') {
+              statusLabel.textContent = "✔ PASS";
+              statusLabel.className = "text-2xl font-bold text-green-600 mb-1";
+              statusDetailLabel.className = "text-lg text-green-600 mb-4";
+            } else {
+              statusLabel.textContent = "✖ FAIL";
+              statusLabel.className = "text-2xl font-bold text-red-600 mb-1";
+              statusDetailLabel.className = "text-lg text-red-600 mb-4";
+            }
+            statusDetailLabel.textContent = results.status_msg || '';
+            res.front_rear_load.textContent = `${results.front_load?.toFixed(2) || '-'} Ton / ${results.rear_load?.toFixed(2) || '-'} Ton`;
+            res.q1_q2.textContent = `${results.q_values?.Q1?.toFixed(2) || '-'} Ton / ${results.q_values?.Q2?.toFixed(2) || '-'} Ton`;
+            res.q3_q4.textContent = `${results.q_values?.Q3?.toFixed(2) || '-'} Ton / ${results.q_values?.Q4?.toFixed(2) || '-'} Ton`;
+            res.ql.textContent = `${results.ql_name || '-'} = ${results.ql_value?.toFixed(2) || '-'} Ton`;
+            res.q.textContent = `${results.q_value?.toFixed(2) || '-'} Ton`;
+            res.delta_q.textContent = `${results.delta_q?.toFixed(2) || '-'} Ton`;
+            res.delta_q_ratio.textContent = `${((results.delta_q_by_q || 0) * 100).toFixed(2)}%`;
+            res.limit.textContent = `${((results.limit || 0) * 100).toFixed(0)}%`;
+          }
+        }
+
+        lastInputData = inputs;
+        closeHistoryModal();
+
+      } catch (err) {
+        console.error('Failed to load calculation:', err);
+      }
+    }
+
+    // --- Initial setup ---
+    updateTotalLoadDefault(); // Set correct default load on page load
+  </script>
+
+  </div>
+  </main>
+  
+  <!-- FOOTER -->
+  <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto py-8">
+    <div class="px-6 flex flex-col md:flex-row justify-between items-center">
+        <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">© 2024 Premnath Engineering Works • All rights reserved</p>
+    </div>
+  </footer>
+
+
+</body>
+</html>
